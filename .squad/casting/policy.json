@@ -1,9 +1,0 @@
-{
-  "casting_policy_version": "1.1",
-  "allowlist_universes": [
-    "Dungeon Crawler Carl"
-  ],
-  "universe_capacity": {
-    "Dungeon Crawler Carl": 12
-  }
-}

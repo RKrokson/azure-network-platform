@@ -34,13 +34,15 @@ tfplan
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
-# Squad: ignore runtime state (logs, inbox, sessions)
-.squad/orchestration-log/
-.squad/log/
-.squad/decisions/inbox/
-.squad/sessions/
-# Squad: SubSquad activation file (local to this machine)
+# Squad: dev-surface — local team state, not for public consumption
+.squad/
 .squad-workstream
+
+# Copilot: dev-surface — local skills and session state
+.copilot/
+
+# Internal design docs — not customer-facing
+docs/design/
 
 # IDE, environment, and OS files
 .vscode/
