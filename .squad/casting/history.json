@@ -1,9 +1,0 @@
-[
-  {
-    "assignment_id": "dcc-2026-03-27",
-    "universe": "Dungeon Crawler Carl",
-    "timestamp": "2026-03-27T02:12:00Z",
-    "agents": ["Carl", "Donut", "Mordecai", "Katia"],
-    "reason": "User-requested universe. Azure IaC project — 4 agents for lead/infra/docs/validation."
-  }
-]
