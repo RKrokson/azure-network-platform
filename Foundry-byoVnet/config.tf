@@ -22,6 +22,7 @@ terraform {
 }
 # Setup providers
 provider "azurerm" {
+  skip_provider_registration = true
   features {
     resource_group {
       # Disabled to allow clean terraform destroy in this non-production environment.
