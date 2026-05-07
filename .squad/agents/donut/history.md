@@ -48,7 +48,27 @@ The SKILL.md says previous deploys used `ryan@krokson.xyz` on `ME-rykrokso-01` (
 
 ---
 
-## Learnings — 2026-05-07
+## Learnings — 2026-05-07 (UPDATED — deploy completed)
+
+### Deploy Timing Actuals (2026-05-07 — ME-rykrokso-01, ryan@krokson.xyz, swedencentral)
+- **Networking init:** ~90s
+- **Networking plan:** ~5 min (modtm data reads are the long pole)
+- **Networking apply:** ~35 min wall clock (579 resources, 0 errors, 0 retries)
+- **Foundry-byoVnet init:** ~30s
+- **Foundry-byoVnet plan:** ~30s
+- **Foundry-byoVnet apply:** ~25 min wall clock (32 resources, 0 errors, 0 retries)
+- **Total wall clock:** ~65 min
+- **Long poles:** vHub (~5-10 min Azure-side), CosmosDB PE (10m47s), AI Search (6m41s), Foundry capability host (2m43s)
+
+### Transient Patterns (2026-05-07 deploy)
+- **None observed.** Zero transient errors, zero re-applies needed. Clean first-pass on ME-rykrokso-01 with ryan@krokson.xyz identity and all providers pre-registered.
+- The previous 403s on Private DNS zones were identity-specific (rykrokso@microsoft.com on b6b5dea5). With ryan@krokson.xyz (owner of krokson.xyz tenant), all zones provisioned cleanly.
+
+### No-Over-Engineering Directive (Ryan, 2026-05-07)
+- This is a demo/lab repo where Ryan has admin rights. Do NOT add variables, toggles, or knobs for hypothetical environments.
+- `skip_provider_registration = true` was reverted — it was over-engineering. Ryan has provider registration rights in his own sub.
+- Apply this to all future changes: if a setting isn't needed by THIS repo's intent (demo/lab, full admin), remove it rather than wrapping it.
+- Carl proposed a variable wrapper for `skip_provider_registration`; Ryan rejected it explicitly. Pattern: configs should be minimal and intent-revealing.
 
 ### ARM_SUBSCRIPTION_ID System-Level vs Session-Level
 - `$env:ARM_SUBSCRIPTION_ID` set in a PowerShell session does NOT persist to child/async processes unless set inline.
@@ -56,17 +76,14 @@ The SKILL.md says previous deploys used `ryan@krokson.xyz` on `ME-rykrokso-01` (
 - **Pattern:** ALWAYS set `$env:ARM_SUBSCRIPTION_ID = "..."` at the start of EVERY Terraform command block when the system default may be wrong.
 - **Pre-flight check:** Verify `$env:ARM_SUBSCRIPTION_ID` matches `az account show --query id -o tsv` BEFORE generating the plan. A plan built against the wrong subscription will deploy resources there — partial state in wrong sub is painful to clean up.
 
-### skip_provider_registration Required for Managed Subscriptions
-- The azurerm provider default tries to register ~50+ resource providers at init time.
-- In managed enterprise subscriptions (Picasso DevX, likely others), users don't have `*/register/action`.
-- `skip_provider_registration = true` in the provider block is the fix. Added to both Networking and Foundry-byoVnet config.tf. Should be added to any new modules too.
-- Still need the required providers pre-registered by a subscription admin (specifically Microsoft.Compute for VMs).
+### skip_provider_registration — Reverted (Now Obsolete for This Repo)
+- Was added for Picasso DevX (managed enterprise sub, no `*/register/action`). That sub is no longer the target.
+- ME-rykrokso-01 (krokson.xyz) with ryan@krokson.xyz = full owner rights. All providers registered. `skip_provider_registration` not needed.
+- If ever targeting a managed sub again: add it back. But don't preemptively add it to modules.
 
-### azapi Private DNS Zone 403 — Possible Policy Block
-- azapi uses `Microsoft.Network/privateDnsZones@2024-06-01` API version for the AVM DNS module.
-- In some subscriptions/tenants, corporate Azure Policy may deny creation of certain Private DNS zones (Purview, Power BI, CosmosDB) as a governance measure to centralize DNS management.
-- The az CLI (`az network private-dns zone list`) uses an older API version and succeeds — the block is API-version or operation-specific.
-- **If b6b5dea5 is the intended target:** Ryan needs to check for Azure Policy denying Private DNS zone creation, or run with `add_private_dns00 = false` to unblock the core networking deploy.
+### azapi Private DNS Zone 403 — Resolved
+- Previous 403s were caused by running with rykrokso@microsoft.com (corporate identity) against b6b5dea5 (personal sub). Identity mismatch = missing RBAC.
+- With ryan@krokson.xyz (owner), all Private DNS zones (including Purview, Power BI, CosmosDB zones) created cleanly. Not a policy block — was an RBAC/identity issue.
 
 ---
 

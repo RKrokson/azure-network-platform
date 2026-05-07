@@ -1,8 +1,8 @@
 # SKILL: Landing Zone Deploy
 
 **Owner:** Donut (Infra Dev)  
-**Last updated:** 2026-04-30  
-**Validated:** Full cycle 2026-04-30 (579 Networking + full Fabric-private, inbound_and_outbound + lakehouse)
+**Last updated:** 2026-05-07  
+**Validated:** Full cycle 2026-05-07 (579 Networking + 32 Foundry-byoVnet, ME-rykrokso-01, swedencentral, 0 retries)
 
 ---
 
@@ -38,10 +38,8 @@ az account show --query "{user:user.name, sub:name, id:id}" -o json
 # Must show the intended subscription. If not, set it first:
 #   az account set --subscription <subscription_id>
 
-# CRITICAL: Run setSubscription.ps1 EVERY session to sync ARM_SUBSCRIPTION_ID
-# to the current az CLI context. The system-level env var (set via setx) may be
-# stale from a prior session pointing to a different subscription.
-.\setSubscription.ps1
+# CRITICAL: Set ARM_SUBSCRIPTION_ID inline every session — do not rely on system-level setx value
+$env:ARM_SUBSCRIPTION_ID = (az account show --query id -o tsv)
 
 # Verify they match:
 $cliSub = az account show --query id -o tsv
@@ -51,10 +49,11 @@ if ($env:ARM_SUBSCRIPTION_ID -ne $cliSub) {
 }
 
 # 5. Confirm required providers are registered in target subscription
-az provider show --namespace Microsoft.Compute   --query "{ns:namespace,state:registrationState}" -o json
-az provider show --namespace Microsoft.Network   --query "{ns:namespace,state:registrationState}" -o json
-az provider show --namespace Microsoft.KeyVault  --query "{ns:namespace,state:registrationState}" -o json
-# All must show "Registered". If any show "NotRegistered", subscription admin must register them.
+az provider show --namespace Microsoft.Compute   --query registrationState -o tsv
+az provider show --namespace Microsoft.Network   --query registrationState -o tsv
+az provider show --namespace Microsoft.KeyVault  --query registrationState -o tsv
+# All must show "Registered". In this repo's target sub (ME-rykrokso-01, ryan@krokson.xyz),
+# all are registered. If deploying to a managed sub, a sub admin must register them first.
 
 # 6. Confirm tfvars match intended settings
 # Networking: single-region (sece), add_firewall00=true, add_private_dns00=true, create_vhub01=false
@@ -79,11 +78,11 @@ wrong sub + clearing the state file.
 
 ## Deploy Order
 
-**Networking must always be deployed first.** Fabric-private reads from `../Networking/terraform.tfstate`.
+**Networking must always be deployed first.** Foundry-byoVnet reads from `../Networking/terraform.tfstate`.
 
 ```
 1. Networking        (platform LZ — foundation)
-2. Fabric-private    (app LZ — depends on Networking state)
+2. Foundry-byoVnet   (app LZ — depends on Networking state)
 ```
 
 ---
@@ -91,107 +90,85 @@ wrong sub + clearing the state file.
 ## Step 1: Deploy Networking
 
 ```powershell
+$env:ARM_SUBSCRIPTION_ID = (az account show --query id -o tsv)
 Set-Location "C:\github\azure-network-platform\Networking"
-terraform init
-terraform apply -auto-approve
+terraform init -upgrade
+terraform plan -out=tfplan
+terraform apply tfplan
 ```
 
-**Expected:** ~579 resources, ~36 min.  
-**Long pole:** modtm data sources (~30 min reading GitHub). Normal — do not interrupt.  
+**Expected:** ~579 resources, ~35 min.  
+**Long pole:** modtm data sources (~5 min reading GitHub), vHub creation (~5-10 min Azure-side).  
 **Known transient:** `azapi_resource.dns_policy_dns_vnet_link` InternalServerError. Simple re-apply resolves it (no state manipulation needed).
 
 **Success markers:**
 - `Apply complete! Resources: 579 added, 0 changed, 0 destroyed.`
-- Outputs include `vhub00_id`, `dns_zone_fabric_id`, `dns_server_ip00`
+- Outputs include `vhub00_id`, `firewall_private_ip00`, `key_vault_name`, `rg_net00_name`
 
 ---
 
 ## Step 2: Deploy Foundry-byoVnet
 
 ```powershell
-Set-Location "C:\github\azure-network-platform\Foundry-byoVnet"
 $env:ARM_SUBSCRIPTION_ID = (az account show --query id -o tsv)
-terraform init
-terraform apply -auto-approve
+Set-Location "C:\github\azure-network-platform\Foundry-byoVnet"
+terraform init -upgrade
+terraform plan -out=tfplan
+terraform apply tfplan
 ```
 
-**Expected:** ~30-40 resources, ~20-25 min.
+**Expected:** 32 resources, ~25 min.
 
 ### Known Transients
 
-Private endpoints can hit transient errors on creation — simple re-apply resolves.
+- CosmosDB private endpoint takes 10+ min Azure-side — normal, not a failure.
+- AI Search resource takes 6+ min — normal.
+- Foundry capability host takes ~2-3 min after a 60s RBAC wait — expected.
+- Other PE transients: simple re-apply resolves.
 
 ### Key Outputs
 
-- `foundry_endpoint` — AI Foundry project endpoint URL
-- Private endpoint IPs for each Foundry service
-
----
-
-## Known Issue: Provider Registration in Managed Subscriptions
-
-The azurerm provider by default tries to register resource providers at startup.
-In managed subscriptions, users often lack `*/register/action`.
-
-**Fix (already applied to both modules):**
-```hcl
-provider "azurerm" {
-  skip_provider_registration = true
-  features { ... }
-}
-```
-
-Required providers still need to be registered by a subscription admin. Check before deploying:
-```powershell
-az provider show --namespace Microsoft.Compute --query registrationState -o tsv
-# Must be "Registered"
-```
+- `ai_foundry_id` — AI Foundry account resource ID
+- `ai_foundry_project_id` — Project resource ID (use for AI Foundry Studio URL)
+- `ai_search_id` — AI Search service resource ID
+- `resource_group_id` — Foundry RG (`rg-ai00-sece-{suffix}`)
 
 ---
 
 ## Post-Deploy Verification
 
 ```powershell
-# Check final Fabric-private outputs
-Set-Location "C:\github\azure-network-platform\Fabric-private"
+# Check Foundry outputs
+Set-Location "C:\github\azure-network-platform\Foundry-byoVnet"
 terraform output
 ```
 
-**Key outputs to verify:**
-- `fabric_workspace_id` — workspace GUID (format: `4f44a9c1-...`)
-- `workspace_private_endpoint_ip` — should be `172.20.80.5`
-- `lakehouse_sql_connection_string_private_link` — contains `.z4f.datawarehouse.fabric.microsoft.com` (z{xy} format for SSMS on private network)
-- `mpe_keyvault_id`, `mpe_sql_id`, `mpe_storage_id` — all three should be populated
-
-**Workspace URL:**  
-`https://app.fabric.microsoft.com/groups/{fabric_workspace_id}`  
-Access requires VPN or Bastion (deny-public is active on `inbound_and_outbound` mode).
+**Key things to verify:**
+- AI Foundry Studio: `https://ai.azure.com` — sign in, switch to project `project{suffix}` in `swedencentral`
+- Private endpoints: cosmosdb, storage, ai-search — all should appear in `rg-ai00-sece-{suffix}`
+- vHub connection: `vhub00-to-ai-vnet-{suffix}` in `rg-net00-sece-{suffix}` — confirms spoke is routed
 
 **Bastion host:**  
 `bastion-host00-sece` in `rg-net00-sece-{suffix}`  
 Connect via Azure Portal → Bastion. Use VM credentials from KV `kv00-sece-{suffix}`.
 
-**SQL connection string (private — SSMS):**  
-Use `lakehouse_sql_connection_string_private_link` output.  
-Format: `{workspace-encoded}.z{xy}.datawarehouse.fabric.microsoft.com`  
-Port: 1433. Requires VPN or Bastion. Regular (non-z{xy}) format will fail from private network.
-
 ---
 
-## Timing Reference
+## Timing Reference (2026-05-07 actuals — ME-rykrokso-01, swedencentral)
 
-| Module | Resources | Typical Time | Notes |
-|--------|-----------|--------------|-------|
-| Networking init | — | ~2 min | Providers from cache |
-| Networking apply | 579 | ~55 min | modtm is the long pole (~30 min); vHub+Firewall ~20 min |
-| Foundry-byoVnet init | — | ~30 sec | |
-| Foundry-byoVnet apply | ~30-40 | ~20-25 min | PE transients may add 1 retry |
-| **Total** | **~620** | **~80 min** | |
+| Module | Resources | Actual Time | Notes |
+|--------|-----------|-------------|-------|
+| Networking init | — | ~90s | Providers from cache |
+| Networking plan | — | ~5 min | modtm data reads |
+| Networking apply | 579 | ~35 min | vHub ~5-10 min, DNS zones fast (0 transients) |
+| Foundry-byoVnet init | — | ~30s | |
+| Foundry-byoVnet plan | — | ~30s | |
+| Foundry-byoVnet apply | 32 | ~25 min | CosmosDB PE 10m47s, AI Search 6m41s, cap host 2m43s |
+| **Total** | **611** | **~65 min** | 0 retries, 0 errors |
 
 ---
 
 ## See Also
 
 - `.squad/skills/lz-teardown/SKILL.md` — reverse this process
-- `setSubscription.ps1` — sets ARM_SUBSCRIPTION_ID env var for providers (run every session)
-- `.squad/decisions/inbox/donut-deploy-2026-05-07.md` — subscription mismatch incident + provider registration blockers
+- `setSubscription.ps1` — reference script showing az CLI commands for subscription alignment
