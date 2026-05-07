@@ -1,14 +1,20 @@
-# Donut — Infra Developer (she/her, female cat) — SUMMARIZED (2026-04-29)
+# Donut — Infra Developer (she/her, female cat)
 
 - **Owner:** Ryan Krokson
 - **Project:** Azure IaC demo/lab environments — Terraform modules for Azure vWAN, AI Foundry, networking
 - **Stack:** Terraform (azurerm >= 4.0, azapi >= 2.0, random ~> 3.5), PowerShell, Azure CLI
 - **Structure:** Three root modules — Networking (foundation), Foundry-byoVnet/Fabric-private, Foundry-managedVnet linked via terraform_remote_state
 - **Created:** 2026-03-27
+- **History archived to:** `.squad/agents/donut/history-archive.md` (phases 1-6, pre-2026-05-07 deploy success)
 
 ---
 
-## Most Recent Work (2026-05-07 — Networking+Foundry-byoVnet Deploy Attempt — BLOCKED)
+## Most Recent Work (2026-05-07 — Networking+Foundry-byoVnet Deploy — SUCCESS ✅)
+
+- **Phase 1:** Reverted `skip_provider_registration = true` per Carl's architectural verdict (commit 2537ef9). Applied user directive: keep demo/lab configs minimal.
+- **Phase 2:** Successful full deploy of Networking (579 res) + Foundry-byoVnet (32 res) to ME-rykrokso-01 / swedencentral. Zero retries, production-ready state.
+
+## Prior Work (2026-05-07 — First Deploy Attempt — BLOCKED)
 
 - **Task:** Deploy Networking LZ + Foundry-byoVnet to Picasso DevX for Ryan's testing
 - **Duration:** ~60 min wall clock (no Azure resources reached final state due to auth blockers)
