@@ -9,6 +9,20 @@
 
 ---
 
+## Most Recent Work (2026-05-08 — Foundry-byoVnet + Networking Teardown — SUCCESS ✅)
+
+- **Task:** Full teardown of Foundry-byoVnet (32 res → 0) + Networking (579 res → 0), ME-rykrokso-01, swedencentral
+- **Duration:** ~75 min wall clock
+- **Outcome:** SUCCESS. Zero orphan RGs. Both state files at 0 resources. Environment clean.
+- **Status:** Complete. No outstanding issues.
+- **Key Incidents:**
+  1. **Foundry first destroy attempt exited code 1:** Most resources destroyed cleanly (CosmosDB PE 12m6s, all AI services gone) but subnet deletion blocked. Two blockers: (a) `legionservicelink` on `ai-foundry-subnet-sece` — AI Foundry soft-delete purged immediately (`aifoundry3771`), but link persisted 5+ min. (b) Orphan NIC `BOT-PE-NIC` on `private-endpoint-subnet-sece` — tied to manually-created PE `bot-pe` (testing artifact).
+  2. **Orphan testing resources in Foundry RG:** Ryan had manually deployed `bot-pe`, `bot-token-pe`, `bot1-pe` (private endpoints), `bot-pe-nic`, `bot-token-pe-nic`, `bot1-pe-nic` (NICs), and `test-flow47755` (BotService) during testing. None in Terraform state, all blocking subnet cleanup. Deleted manually via `az network private-endpoint delete` + `az resource delete`.
+  3. **Stale Container Apps legionservicelink:** After clearing orphan PEs, a second Foundry retry still failed: `ai-foundry-subnet-sece` had a `serviceAssociationLinks/legionservicelink` from `Microsoft.App/environments` (Container Apps delegation on subnet). The CAE environment no longer existed (`az containerapp env list` = empty) — stale phantom link. ARM returned `UnauthorizedClientApplication` (409) on REST DELETE — only the service itself can remove it. Resolution: waited ~5 min; Azure propagated CAE deletion and cleared the link. Then Terraform retry succeeded (4 resources in ~40s).
+  4. **Networking destroy modtm phase:** ~30 min of silent `modtm_module_source ... Reading...` is normal. vHub took 10m10s. Total Networking destroy ~42 min.
+
+---
+
 ## Most Recent Work (2026-05-07 — Networking+Foundry-byoVnet Deploy — SUCCESS ✅)
 
 - **Phase 1:** Reverted `skip_provider_registration = true` per Carl's architectural verdict (commit 2537ef9). Applied user directive: keep demo/lab configs minimal.
@@ -51,6 +65,38 @@ The SKILL.md says previous deploys used `ryan@krokson.xyz` on `ME-rykrokso-01` (
 - b6b5dea5 resource groups: deleted
 - Picasso DevX: no resources deployed
 - `skip_provider_registration = true` committed to both Networking and Foundry-byoVnet config.tf
+
+---
+
+## Learnings — 2026-05-08 (Teardown)
+
+### Destroy Timing Actuals (2026-05-08 — ME-rykrokso-01, ryan@krokson.xyz, swedencentral)
+- **Foundry-byoVnet destroy attempt 1:** ~22 min (failed — subnet blocked)
+- **AI Foundry purge:** ~30s (immediate)
+- **Orphan resource cleanup:** ~10 min (bot PEs + BotService + 5-min wait for stale CAE legionservicelink)
+- **Foundry-byoVnet destroy attempt 2:** ~40s (just VNet/subnets/RG — exit 0)
+- **Networking destroy:** ~42 min (modtm refresh ~30 min, actual Azure deletes ~12 min, vHub ~10 min)
+- **Total wall clock:** ~75 min
+
+### Transient Patterns (2026-05-08 teardown)
+- **No Terraform transients.** Networking destroy ran clean to exit 0 first pass.
+- **Subnet blockers were NOT Terraform transients** — they were caused by manually-created testing resources.
+
+### New Pattern: Pre-Destroy Orphan Resource Check
+- Before `terraform destroy` on Foundry-byoVnet, check for non-Terraform resources in the Foundry RG:
+  ```powershell
+  az resource list --resource-group <rg-ai00-sece-xxxx> -o table
+  ```
+  If any private endpoints, NICs, or BotServices appear that aren't in Terraform state, delete them first. They WILL block subnet cleanup.
+
+### New Pattern: Stale Container Apps legionservicelink
+- If `terraform destroy` on Foundry-byoVnet fails with `InUseSubnetCannotBeDeleted: ... serviceAssociationLinks/legionservicelink`, check whether the link is from AI Foundry (Cognitive Services) or Container Apps (`linkedResourceType: Microsoft.App/environments`).
+- **AI Foundry link (Cognitive Services):** Purge the soft-deleted account → wait 5-10 min → link clears.
+- **Container Apps link:** The owning CAE must be deleted. If no CAE exists (`az containerapp env list` = empty), it's a stale phantom. ARM returns `UnauthorizedClientApplication` on REST DELETE attempts — only the CA service can delete it. Wait 5 min and poll `serviceAssociationLinks`; Azure clears it automatically after propagation.
+- **Do not attempt:** `az network vnet subnet update --remove delegations` while the link exists — Azure blocks it (`SubnetMissingRequiredDelegation`).
+
+### Soft-Delete Purge Worked First Try
+- `az cognitiveservices account purge` on `aifoundry3771` succeeded immediately (exit 0, ~30s). No retry needed.
 
 ---
 
