@@ -49,3 +49,21 @@ resource "azurerm_private_endpoint" "acr_pe" {
     private_dns_zone_ids = [data.terraform_remote_state.networking.outputs.dns_zone_acr_id]
   }
 }
+
+resource "azurerm_monitor_diagnostic_setting" "diag_acr" {
+  name               = "diag-acr-${data.terraform_remote_state.networking.outputs.azure_region_0_abbr}-${random_string.unique.result}"
+  target_resource_id = azurerm_container_registry.acr.id
+
+  log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
+
+  enabled_log {
+    category = "ContainerRegistryLoginEvents"
+  }
+  enabled_log {
+    category = "ContainerRegistryRepositoryEvents"
+  }
+
+  metric {
+    category = "AllMetrics"
+  }
+}
