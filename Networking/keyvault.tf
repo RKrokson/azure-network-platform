@@ -46,3 +46,18 @@ data "azurerm_key_vault_secret" "vm_password" {
   name         = var.kv_secret_name
   depends_on   = [azurerm_key_vault_secret.vm_password]
 }
+
+resource "azurerm_monitor_diagnostic_setting" "kv_logs" {
+  name               = "kv-logs-${var.azure_region_0_abbr}-${local.suffix}"
+  target_resource_id = azurerm_key_vault.kv00.id
+
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.law00.id
+
+  enabled_log {
+    category = "AuditEvent"
+  }
+
+  enabled_metric {
+    category = "AllMetrics"
+  }
+}

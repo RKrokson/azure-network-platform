@@ -42,6 +42,21 @@ resource "azurerm_virtual_hub_routing_intent" "routing_intent" {
   }
 }
 
+resource "azurerm_monitor_diagnostic_setting" "vhub_logs" {
+  name               = "vhub-logs-${var.region_abbr}"
+  target_resource_id = azurerm_virtual_hub.hub.id
+
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category = "RouteTable"
+  }
+
+  enabled_metric {
+    category = "AllMetrics"
+  }
+}
+
 # ── Shared VNet & Subnets ──────────────────────────────────────
 
 resource "azurerm_virtual_network" "shared_vnet" {
@@ -382,6 +397,21 @@ resource "azurerm_bastion_host" "bastion" {
     name                 = "configuration"
     subnet_id            = azurerm_subnet.bastion_subnet.id
     public_ip_address_id = azurerm_public_ip.bastion_pip.id
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "bastion_logs" {
+  name               = "bastion-logs-${var.region_abbr}"
+  target_resource_id = azurerm_bastion_host.bastion.id
+
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category = "BastionAuditLogs"
+  }
+
+  enabled_metric {
+    category = "AllMetrics"
   }
 }
 
