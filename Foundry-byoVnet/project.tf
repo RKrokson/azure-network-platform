@@ -124,6 +124,39 @@ resource "azapi_resource" "conn_aisearch" {
   ]
 }
 
+## Create workspace-based Application Insights for Foundry project tracing
+##
+resource "azurerm_application_insights" "foundry_appinsights" {
+  name                = "appinsights-foundry-${random_string.unique.result}"
+  location            = azurerm_resource_group.rg-ai00.location
+  resource_group_name = azurerm_resource_group.rg-ai00.name
+  application_type    = "web"
+  workspace_id        = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
+  tags                = local.common_tags
+}
+
+## Create project connection to Application Insights
+##
+resource "azapi_resource" "conn_appinsights" {
+  type                      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-06-01"
+  name                      = azurerm_application_insights.foundry_appinsights.name
+  parent_id                 = azapi_resource.foundry_project.id
+  schema_validation_enabled = false
+
+  body = {
+    properties = {
+      category = "ApplicationInsights"
+      target   = azurerm_application_insights.foundry_appinsights.connection_string
+      authType = "AAD"
+      metadata = {
+        ApiType    = "Azure"
+        ResourceId = azurerm_application_insights.foundry_appinsights.id
+        location   = azurerm_resource_group.rg-ai00.location
+      }
+    }
+  }
+}
+
 # Wait duration from PG-validated reference implementation. Do not reduce without testing.
 resource "time_sleep" "wait_rbac" {
   depends_on = [
@@ -142,6 +175,7 @@ resource "azapi_resource" "foundry_project_capability_host" {
     azapi_resource.conn_aisearch,
     azapi_resource.conn_cosmosdb,
     azapi_resource.conn_storage,
+    azapi_resource.conn_appinsights,
     time_sleep.wait_rbac
   ]
   type                      = "Microsoft.CognitiveServices/accounts/projects/capabilityHosts@2025-04-01-preview"
