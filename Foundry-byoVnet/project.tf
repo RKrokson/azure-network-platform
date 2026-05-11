@@ -136,14 +136,31 @@ resource "azurerm_application_insights" "foundry_appinsights" {
 }
 
 ## Create project connection to Application Insights
-## NOTE: The connections API (accounts/projects/connections) does not support
-## category "ApplicationInsights" in Sweden Central — all attempts return
-## HTTP 400 "unable to deserialize request body" regardless of API version
-## (2025-06-01, 2025-10-01-preview, 2026-03-01). The App Insights resource
-## is deployed and wired to LAW via diagnostic settings. Foundry Studio
-## tracing is still expected to flow via the diag settings path; if not,
-## the project connection will need re-investigation against the ARM spec.
-## Tracked: squad/decisions/inbox/donut-deploy-logging-2026-05-11.md
+## category = "AppInsights" (not "ApplicationInsights") per ARM schema enum — Carl's v2 spec 2026-05-11
+## authType = "ApiKey"; target = resource ID; credentials.key = connection string
+##
+resource "azapi_resource" "conn_appinsights" {
+  type                      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-06-01"
+  name                      = azurerm_application_insights.foundry_appinsights.name
+  parent_id                 = azapi_resource.foundry_project.id
+  schema_validation_enabled = false
+
+  body = {
+    properties = {
+      category = "AppInsights"
+      authType = "ApiKey"
+      target   = azurerm_application_insights.foundry_appinsights.id
+      credentials = {
+        key = azurerm_application_insights.foundry_appinsights.connection_string
+      }
+      isSharedToAll = false
+      metadata = {
+        ApiType    = "Azure"
+        ResourceId = azurerm_application_insights.foundry_appinsights.id
+      }
+    }
+  }
+}
 
 # Wait duration from PG-validated reference implementation. Do not reduce without testing.
 resource "time_sleep" "wait_rbac" {
@@ -163,6 +180,7 @@ resource "azapi_resource" "foundry_project_capability_host" {
     azapi_resource.conn_aisearch,
     azapi_resource.conn_cosmosdb,
     azapi_resource.conn_storage,
+    azapi_resource.conn_appinsights,
     time_sleep.wait_rbac
   ]
   type                      = "Microsoft.CognitiveServices/accounts/projects/capabilityHosts@2025-04-01-preview"
