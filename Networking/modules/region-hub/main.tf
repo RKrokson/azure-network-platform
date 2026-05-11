@@ -42,20 +42,8 @@ resource "azurerm_virtual_hub_routing_intent" "routing_intent" {
   }
 }
 
-resource "azurerm_monitor_diagnostic_setting" "vhub_logs" {
-  name               = "vhub-logs-${var.region_abbr}"
-  target_resource_id = azurerm_virtual_hub.hub.id
-
-  log_analytics_workspace_id = var.log_analytics_workspace_id
-
-  enabled_log {
-    category = "RouteTable"
-  }
-
-  enabled_metric {
-    category = "AllMetrics"
-  }
-}
+# Note: azurerm_monitor_diagnostic_setting is not supported for microsoft.network/virtualhubs.
+# vHub metrics/logs are only available via the Azure Virtual WAN portal experience.
 
 # ── Shared VNet & Subnets ──────────────────────────────────────
 
