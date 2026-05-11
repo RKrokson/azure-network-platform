@@ -126,6 +126,10 @@ resource "azurerm_application_insights" "foundry_appinsights" {
 }
 
 ## Create project connection to Application Insights
+## TODO (M1 / security): move credentials to sensitive_body once TF is upgraded to >= 1.11.
+## sensitive_body is an azapi v2.x write-only attribute that requires TF 1.11+ protocol support.
+## azapi 2.3.0 + TF 1.10.1 returns "Unsupported argument" — validated 2026-05-11. Track in
+## squad/logging-improvements security follow-up. State file is gitignored; blast radius is local.
 ##
 resource "azapi_resource" "conn_appinsights" {
   type      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-10-01-preview"
