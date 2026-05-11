@@ -54,7 +54,10 @@ resource "azurerm_monitor_diagnostic_setting" "kv_logs" {
   log_analytics_workspace_id = azurerm_log_analytics_workspace.law00.id
 
   enabled_log {
-    category = "AuditEvent"
+    category_group = "audit"
+  }
+  enabled_log {
+    category_group = "allLogs"
   }
 
   enabled_metric {
