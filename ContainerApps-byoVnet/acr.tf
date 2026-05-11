@@ -57,10 +57,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_acr" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category = "ContainerRegistryLoginEvents"
+    category_group = "audit"
   }
   enabled_log {
-    category = "ContainerRegistryRepositoryEvents"
+    category_group = "allLogs"
   }
 
   metric {

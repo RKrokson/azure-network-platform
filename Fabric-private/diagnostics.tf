@@ -9,7 +9,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_fabric_kv" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category = "AuditEvent"
+    category_group = "audit"
+  }
+  enabled_log {
+    category_group = "allLogs"
   }
 
   metric {
@@ -25,13 +28,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_lab_storage_blob" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category = "StorageRead"
+    category_group = "audit"
   }
   enabled_log {
-    category = "StorageWrite"
-  }
-  enabled_log {
-    category = "StorageDelete"
+    category_group = "allLogs"
   }
 
   metric {
@@ -47,7 +47,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_lab_sql_db" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category = "SQLSecurityAuditEvents"
+    category_group = "audit"
+  }
+  enabled_log {
+    category_group = "allLogs"
   }
 
   metric {
