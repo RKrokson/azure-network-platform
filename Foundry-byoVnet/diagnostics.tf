@@ -128,6 +128,19 @@ resource "azurerm_monitor_diagnostic_setting" "diag_storage_table" {
   }
 }
 
+# Storage account parent — metrics only. No log categories exist at parent level; logs live at sub-service tier.
+# Azure only exposes the Transaction metric at Microsoft.Storage/storageAccounts parent scope.
+resource "azurerm_monitor_diagnostic_setting" "diag_storage_account" {
+  name               = "diag-storage-account-${random_string.unique.result}"
+  target_resource_id = azurerm_storage_account.storage_account.id
+
+  log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
+
+  metric {
+    category = "Transaction"
+  }
+}
+
 resource "azurerm_monitor_diagnostic_setting" "diag_foundry_project" {
   name               = "diag-project-${random_string.unique.result}"
   target_resource_id = azapi_resource.foundry_project.id
