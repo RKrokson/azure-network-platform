@@ -7,10 +7,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_foundry" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category = "Audit"
+    category_group = "audit"
   }
   enabled_log {
-    category = "RequestResponse"
+    category_group = "allLogs"
   }
 
   metric {
@@ -25,7 +25,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_aisearch" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category = "OperationLogs"
+    category_group = "audit"
+  }
+  enabled_log {
+    category_group = "allLogs"
   }
 
   metric {
@@ -38,12 +41,14 @@ resource "azurerm_monitor_diagnostic_setting" "diag_cosmosdb" {
   target_resource_id = azurerm_cosmosdb_account.cosmosdb.id
 
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
+  # Dedicated = Resource-specific schema (not legacy AzureDiagnostics) — required for Cosmos per portal finding #6
+  log_analytics_destination_type = "Dedicated"
 
   enabled_log {
-    category = "DataPlaneRequests"
+    category_group = "audit"
   }
   enabled_log {
-    category = "QueryRuntimeStatistics"
+    category_group = "allLogs"
   }
 
   metric {
@@ -60,13 +65,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_storage_blob" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category = "StorageRead"
+    category_group = "audit"
   }
   enabled_log {
-    category = "StorageWrite"
-  }
-  enabled_log {
-    category = "StorageDelete"
+    category_group = "allLogs"
   }
 
   metric {
@@ -81,13 +83,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_storage_file" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category = "StorageRead"
+    category_group = "audit"
   }
   enabled_log {
-    category = "StorageWrite"
-  }
-  enabled_log {
-    category = "StorageDelete"
+    category_group = "allLogs"
   }
 
   metric {
@@ -102,13 +101,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_storage_table" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category = "StorageRead"
+    category_group = "audit"
   }
   enabled_log {
-    category = "StorageWrite"
-  }
-  enabled_log {
-    category = "StorageDelete"
+    category_group = "allLogs"
   }
 
   metric {
@@ -123,13 +119,28 @@ resource "azurerm_monitor_diagnostic_setting" "diag_storage_queue" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category = "StorageRead"
+    category_group = "audit"
   }
   enabled_log {
-    category = "StorageWrite"
+    category_group = "allLogs"
+  }
+
+  metric {
+    category = "AllMetrics"
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "diag_foundry_project" {
+  name               = "diag-project-${random_string.unique.result}"
+  target_resource_id = azapi_resource.foundry_project.id
+
+  log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
+
+  enabled_log {
+    category_group = "audit"
   }
   enabled_log {
-    category = "StorageDelete"
+    category_group = "allLogs"
   }
 
   metric {

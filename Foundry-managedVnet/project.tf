@@ -136,13 +136,20 @@ resource "azapi_resource" "conn_appinsights" {
 
   body = {
     properties = {
-      category = "ApplicationInsights"
-      target   = azurerm_application_insights.foundry_appinsights.connection_string
-      authType = "AAD"
+      # AppInsights is the correct enum value (not ApplicationInsights) — confirmed ARM schema + Carl's v2 spec 2026-05-11
+      category = "AppInsights"
+      # Portal only exposes ApiKey for AppInsights; AAD is untested for this category
+      authType = "ApiKey"
+      # target = resource ID per official Microsoft Foundry sample
+      target = azurerm_application_insights.foundry_appinsights.id
+      # credentials.key = full connection string (InstrumentationKey=...) per official sample
+      credentials = {
+        key = azurerm_application_insights.foundry_appinsights.connection_string
+      }
+      isSharedToAll = false
       metadata = {
         ApiType    = "Azure"
         ResourceId = azurerm_application_insights.foundry_appinsights.id
-        location   = azurerm_resource_group.rg-ai01.location
       }
     }
   }
