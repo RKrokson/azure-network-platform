@@ -48,6 +48,19 @@ resource "azurerm_subnet_network_security_group_association" "pe_subnet_nsg_asso
   network_security_group_id = azurerm_network_security_group.pe_subnet_nsg.id
 }
 
+# NSG for Foundry subnet — empty per Ryan's directive (vWAN firewall handles egress)
+resource "azurerm_network_security_group" "ai_foundry_subnet_nsg" {
+  name                = "nsg-foundry-${data.terraform_remote_state.networking.outputs.azure_region_0_abbr}-${random_string.unique.result}"
+  location            = azurerm_resource_group.rg-ai01.location
+  resource_group_name = azurerm_resource_group.rg-ai01.name
+  tags                = local.common_tags
+}
+
+resource "azurerm_subnet_network_security_group_association" "ai_foundry_subnet_nsg_assoc" {
+  subnet_id                 = azurerm_subnet.ai_foundry_subnet.id
+  network_security_group_id = azurerm_network_security_group.ai_foundry_subnet_nsg.id
+}
+
 # Connect AI spoke VNet to vHub
 resource "azurerm_virtual_hub_connection" "vhub_connection_to_ai" {
   name                      = "vhub00-to-${var.ai_vnet_name}-${random_string.unique.result}"
