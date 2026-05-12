@@ -85,6 +85,190 @@ resource "azurerm_virtual_hub_connection" "hub_connection_shared" {
   internet_security_enabled = var.add_firewall
 }
 
+# ── NSGs ───────────────────────────────────────────────────────
+
+resource "azurerm_network_security_group" "nsg_shared" {
+  name                = "nsg-shared-${var.region_abbr}-${var.suffix}"
+  location            = var.resource_group_location
+  resource_group_name = var.resource_group_name
+  tags                = var.common_tags
+}
+
+resource "azurerm_subnet_network_security_group_association" "nsg_shared_assoc" {
+  subnet_id                 = azurerm_subnet.shared_subnet.id
+  network_security_group_id = azurerm_network_security_group.nsg_shared.id
+}
+
+resource "azurerm_monitor_diagnostic_setting" "nsg_shared_logs" {
+  name                       = "nsg-shared-logs-${var.region_abbr}"
+  target_resource_id         = azurerm_network_security_group.nsg_shared.id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category_group = "audit"
+  }
+  enabled_log {
+    category_group = "allLogs"
+  }
+  enabled_metric {
+    category = "AllMetrics"
+  }
+}
+
+resource "azurerm_network_security_group" "nsg_app" {
+  name                = "nsg-app-${var.region_abbr}-${var.suffix}"
+  location            = var.resource_group_location
+  resource_group_name = var.resource_group_name
+  tags                = var.common_tags
+}
+
+resource "azurerm_subnet_network_security_group_association" "nsg_app_assoc" {
+  subnet_id                 = azurerm_subnet.app_subnet.id
+  network_security_group_id = azurerm_network_security_group.nsg_app.id
+}
+
+resource "azurerm_monitor_diagnostic_setting" "nsg_app_logs" {
+  name                       = "nsg-app-logs-${var.region_abbr}"
+  target_resource_id         = azurerm_network_security_group.nsg_app.id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category_group = "audit"
+  }
+  enabled_log {
+    category_group = "allLogs"
+  }
+  enabled_metric {
+    category = "AllMetrics"
+  }
+}
+
+# Bastion NSG — ALL 8 mandatory rules required; omitting any rule will break Bastion.
+# Source: https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg
+resource "azurerm_network_security_group" "nsg_bastion" {
+  name                = "nsg-bastion-${var.region_abbr}-${var.suffix}"
+  location            = var.resource_group_location
+  resource_group_name = var.resource_group_name
+  tags                = var.common_tags
+
+  security_rule {
+    name                       = "AllowHttpsInbound"
+    priority                   = 120
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "AllowGatewayManagerInbound"
+    priority                   = 130
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "GatewayManager"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "AllowAzureLoadBalancerInbound"
+    priority                   = 140
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "AllowBastionHostCommunication"
+    priority                   = 150
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = ["8080", "5701"]
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+
+  security_rule {
+    name                       = "AllowSshRdpOutbound"
+    priority                   = 100
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = ["22", "3389"]
+    source_address_prefix      = "*"
+    destination_address_prefix = "VirtualNetwork"
+  }
+
+  security_rule {
+    name                       = "AllowAzureCloudOutbound"
+    priority                   = 110
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "*"
+    destination_address_prefix = "AzureCloud"
+  }
+
+  security_rule {
+    name                       = "AllowBastionCommunication"
+    priority                   = 120
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = ["8080", "5701"]
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+
+  security_rule {
+    name                       = "AllowHttpOutbound"
+    priority                   = 130
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "Internet"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "nsg_bastion_assoc" {
+  subnet_id                 = azurerm_subnet.bastion_subnet.id
+  network_security_group_id = azurerm_network_security_group.nsg_bastion.id
+}
+
+resource "azurerm_monitor_diagnostic_setting" "nsg_bastion_logs" {
+  name                       = "nsg-bastion-logs-${var.region_abbr}"
+  target_resource_id         = azurerm_network_security_group.nsg_bastion.id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category_group = "audit"
+  }
+  enabled_log {
+    category_group = "allLogs"
+  }
+  enabled_metric {
+    category = "AllMetrics"
+  }
+}
+
 # ── Firewall (conditional) ─────────────────────────────────────
 
 resource "azurerm_firewall_policy" "fw_policy" {
