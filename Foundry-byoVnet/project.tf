@@ -146,6 +146,7 @@ resource "azapi_resource" "conn_appinsights" {
   schema_validation_enabled = false
 
   body = {
+    name = azurerm_application_insights.foundry_appinsights.name
     properties = {
       category      = "AppInsights"
       authType      = "ApiKey"
