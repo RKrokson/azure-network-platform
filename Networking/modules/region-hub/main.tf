@@ -110,9 +110,6 @@ resource "azurerm_monitor_diagnostic_setting" "nsg_shared_logs" {
   enabled_log {
     category_group = "allLogs"
   }
-  enabled_metric {
-    category = "AllMetrics"
-  }
 }
 
 resource "azurerm_network_security_group" "nsg_app" {
@@ -137,9 +134,6 @@ resource "azurerm_monitor_diagnostic_setting" "nsg_app_logs" {
   }
   enabled_log {
     category_group = "allLogs"
-  }
-  enabled_metric {
-    category = "AllMetrics"
   }
 }
 
@@ -263,9 +257,6 @@ resource "azurerm_monitor_diagnostic_setting" "nsg_bastion_logs" {
   }
   enabled_log {
     category_group = "allLogs"
-  }
-  enabled_metric {
-    category = "AllMetrics"
   }
 }
 

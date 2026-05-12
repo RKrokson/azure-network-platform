@@ -73,10 +73,6 @@ resource "azurerm_monitor_diagnostic_setting" "diag_nsg_aca" {
   enabled_log {
     category_group = "allLogs"
   }
-
-  metric {
-    category = "AllMetrics"
-  }
 }
 
 # Connect ACA spoke VNet to vHub

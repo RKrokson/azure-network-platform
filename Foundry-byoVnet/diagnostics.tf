@@ -171,8 +171,4 @@ resource "azurerm_monitor_diagnostic_setting" "diag_nsg_foundry" {
   enabled_log {
     category_group = "allLogs"
   }
-
-  metric {
-    category = "AllMetrics"
-  }
 }
