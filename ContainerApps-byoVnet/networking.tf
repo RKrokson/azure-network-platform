@@ -68,9 +68,6 @@ resource "azurerm_monitor_diagnostic_setting" "diag_nsg_aca" {
   log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
 
   enabled_log {
-    category_group = "audit"
-  }
-  enabled_log {
     category_group = "allLogs"
   }
 }
