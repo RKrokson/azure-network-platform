@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azapi = {
       source  = "azure/azapi"
-      version = "~> 2.3.0"
+      version = "~> 2.4"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -14,7 +14,7 @@ terraform {
       version = "~>3.5"
     }
   }
-  required_version = ">= 1.8.3"
+  required_version = ">= 1.11"
   # Uncomment to store state in Azure Storage
   # backend "azurerm" {}
 }

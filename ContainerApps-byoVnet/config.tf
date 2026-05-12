@@ -16,7 +16,7 @@ terraform {
       version = "~> 3.5"
     }
   }
-  required_version = ">= 1.8.3"
+  required_version = ">= 1.11"
   # Uncomment to store state in Azure Storage
   # backend "azurerm" {}
 }

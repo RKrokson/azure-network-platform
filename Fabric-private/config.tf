@@ -26,7 +26,7 @@ terraform {
       version = "~> 0.12" # time_sleep for Entra ID propagation delay on identity RBAC
     }
   }
-  required_version = ">= 1.8.3"
+  required_version = ">= 1.11"
   # Uncomment to store state in Azure Storage
   # backend "azurerm" {}
 }
