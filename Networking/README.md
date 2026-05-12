@@ -35,7 +35,7 @@ Rename either to `terraform.tfvars`, set values to `true`, then `terraform plan`
 ## Prerequisites
 
 - Azure CLI installed and authenticated (`az login`)
-- Terraform >= 1.8.3
+- Terraform >= 1.11
 - `ARM_SUBSCRIPTION_ID` environment variable set (see `setSubscription.ps1` in the repo root)
 - Sufficient Azure quota in your target region(s)
 

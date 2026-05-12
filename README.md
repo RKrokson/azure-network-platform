@@ -28,7 +28,7 @@ Future modules will follow the same application landing zone pattern. See the [A
 ## Prerequisites
 
 - Azure CLI installed and authenticated (`az login`)
-- Terraform >= 1.8.3
+- Terraform >= 1.11
 - `ARM_SUBSCRIPTION_ID` environment variable set (see `setSubscription.ps1`)
 - Git
 
