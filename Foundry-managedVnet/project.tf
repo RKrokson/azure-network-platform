@@ -126,10 +126,8 @@ resource "azurerm_application_insights" "foundry_appinsights" {
 }
 
 ## Create project connection to Application Insights
-## TODO (M1 / security): move credentials to sensitive_body once TF is upgraded to >= 1.11.
-## sensitive_body is an azapi v2.x write-only attribute that requires TF 1.11+ protocol support.
-## azapi 2.3.0 + TF 1.10.1 returns "Unsupported argument" — validated 2026-05-11. Track in
-## squad/logging-improvements security follow-up. State file is gitignored; blast radius is local.
+## category = "AppInsights" (not "ApplicationInsights") per ARM schema + Carl's v2 spec 2026-05-11
+## authType = "ApiKey"; target = resource ID; credentials.key = connection string (via sensitive_body)
 ##
 resource "azapi_resource" "conn_appinsights" {
   type      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-10-01-preview"
@@ -140,20 +138,21 @@ resource "azapi_resource" "conn_appinsights" {
 
   body = {
     properties = {
-      # AppInsights is the correct enum value (not ApplicationInsights) — confirmed ARM schema + Carl's v2 spec 2026-05-11
-      category = "AppInsights"
-      # Portal only exposes ApiKey for AppInsights; AAD is untested for this category
-      authType = "ApiKey"
-      # target = resource ID per official Microsoft Foundry sample
-      target = azurerm_application_insights.foundry_appinsights.id
-      # credentials.key = full connection string (InstrumentationKey=...) per official sample
-      credentials = {
-        key = azurerm_application_insights.foundry_appinsights.connection_string
-      }
+      category      = "AppInsights"
+      authType      = "ApiKey"
+      target        = azurerm_application_insights.foundry_appinsights.id
       isSharedToAll = false
       metadata = {
         ApiType    = "Azure"
         ResourceId = azurerm_application_insights.foundry_appinsights.id
+      }
+    }
+  }
+
+  sensitive_body = {
+    properties = {
+      credentials = {
+        key = azurerm_application_insights.foundry_appinsights.connection_string
       }
     }
   }
