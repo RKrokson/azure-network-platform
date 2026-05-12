@@ -11,7 +11,6 @@ resource "azurerm_virtual_network" "aca_vnet" {
 }
 
 # ACA infrastructure subnet — delegated to Microsoft.App/environments
-# No NSG on this subnet (ACA manages its own networking)
 resource "azurerm_subnet" "aca_subnet" {
   name                 = "${var.aca_subnet_name}-${data.terraform_remote_state.networking.outputs.azure_region_0_abbr}"
   resource_group_name  = azurerm_resource_group.rg_aca00.name
@@ -47,6 +46,37 @@ resource "azurerm_network_security_group" "pe_subnet_nsg" {
 resource "azurerm_subnet_network_security_group_association" "pe_subnet_nsg_assoc" {
   subnet_id                 = azurerm_subnet.pe_subnet.id
   network_security_group_id = azurerm_network_security_group.pe_subnet_nsg.id
+}
+
+# NSG for ACA subnet — empty per Ryan's directive (vWAN firewall handles egress)
+resource "azurerm_network_security_group" "aca_subnet_nsg" {
+  name                = "nsg-aca-${data.terraform_remote_state.networking.outputs.azure_region_0_abbr}-${random_string.unique.result}"
+  location            = azurerm_resource_group.rg_aca00.location
+  resource_group_name = azurerm_resource_group.rg_aca00.name
+  tags                = local.common_tags
+}
+
+resource "azurerm_subnet_network_security_group_association" "aca_subnet_nsg_assoc" {
+  subnet_id                 = azurerm_subnet.aca_subnet.id
+  network_security_group_id = azurerm_network_security_group.aca_subnet_nsg.id
+}
+
+resource "azurerm_monitor_diagnostic_setting" "diag_nsg_aca" {
+  name               = "diag-nsg-aca-${data.terraform_remote_state.networking.outputs.azure_region_0_abbr}-${random_string.unique.result}"
+  target_resource_id = azurerm_network_security_group.aca_subnet_nsg.id
+
+  log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
+
+  enabled_log {
+    category_group = "audit"
+  }
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  metric {
+    category = "AllMetrics"
+  }
 }
 
 # Connect ACA spoke VNet to vHub
