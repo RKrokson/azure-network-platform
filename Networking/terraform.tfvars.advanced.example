@@ -1,0 +1,72 @@
+# ─────────────────────────────────────────────
+# Networking — Advanced (dual-region) config
+# ─────────────────────────────────────────────
+# Copy this file to terraform.tfvars and edit.
+# All overridable variables are shown.
+
+# ── Region name → abbreviation pairs ────────
+# "centralus"      = "cus"
+# "eastus2"        = "eus2"
+# "westus"         = "wus"
+# "eastus"         = "eus"
+# "northcentralus" = "ncus"
+# "southcentralus" = "scus"
+# "westcentralus"  = "wcus"
+# "westus2"        = "wus2"
+# "westus3"        = "wus3"
+# "westeurope"     = "weu"
+# "northeurope"    = "neu"
+# "swedencentral"  = "sece"
+
+# ── Regions ──────────────────────────────────
+azure_region_0_name = "swedencentral"
+azure_region_0_abbr = "sece"
+azure_region_1_name = "centralus"
+azure_region_1_abbr = "cus"
+
+# ── Feature toggles ─────────────────────────
+create_vhub01     = true
+add_firewall00    = true
+add_firewall01    = true
+add_private_dns00 = true
+add_private_dns01 = true
+
+# ── VM sizing ────────────────────────────────
+vm00_size = "Standard_B2s"
+vm01_size = "Standard_B2s"
+
+# ── Bastion ──────────────────────────────────
+bastion_host_sku00 = "Standard" # Basic | Standard | Developer
+bastion_host_sku01 = "Standard"
+
+# ── Log Analytics ────────────────────────────
+log_analytics_sku            = "PerGB2018"
+log_analytics_retention_days = 30
+
+# ── Firewall ─────────────────────────────────
+firewall_sku_tier00         = "Premium" # Standard | Premium
+firewall_sku_tier01         = "Premium"
+firewall_availability_zones = ["1", "2", "3"]
+dns_forwarder_ip            = "8.8.8.8"
+
+# ── Virtual Hub 00 address space ─────────────
+azurerm_vhub00_address_prefix       = "10.30.0.0/23"
+shared_vnet_address_space00         = ["10.31.0.0/17"]
+dns_vnet_address_space00            = ["10.31.128.0/17"]
+bastion_subnet_address00            = ["10.31.2.0/24"]
+shared_subnet_address00             = ["10.31.5.0/24"]
+app_subnet_address00                = ["10.31.6.0/24"]
+resolver_inbound_subnet_address00   = ["10.31.128.0/28"]
+resolver_inbound_endpoint_address00 = "10.31.128.4"
+resolver_outbound_subnet_address00  = ["10.31.128.16/28"]
+
+# ── Virtual Hub 01 address space ─────────────
+azurerm_vhub01_address_prefix       = "10.30.4.0/23"
+shared_vnet_address_space01         = ["10.32.0.0/17"]
+dns_vnet_address_space01            = ["10.32.128.0/17"]
+bastion_subnet_address01            = ["10.32.2.0/24"]
+shared_subnet_address01             = ["10.32.5.0/24"]
+app_subnet_address01                = ["10.32.6.0/24"]
+resolver_inbound_subnet_address01   = ["10.32.128.0/28"]
+resolver_inbound_endpoint_address01 = "10.32.128.4"
+resolver_outbound_subnet_address01  = ["10.32.128.16/28"]

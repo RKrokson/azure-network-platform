@@ -1,0 +1,40 @@
+# ─────────────────────────────────────────────
+# Networking — Basic config (both regions)
+# ─────────────────────────────────────────────
+# Copy this file to terraform.tfvars and edit.
+# Only commonly-overridden variables are shown;
+# see variables.tf for the full list.
+# For ALL overridable variables, see terraform.tfvars.advanced.example.
+
+# ── Region name → abbreviation pairs ────────
+# "centralus"      = "cus"
+# "eastus2"        = "eus2"
+# "westus"         = "wus"
+# "eastus"         = "eus"
+# "northcentralus" = "ncus"
+# "southcentralus" = "scus"
+# "westcentralus"  = "wcus"
+# "westus2"        = "wus2"
+# "westus3"        = "wus3"
+# "westeurope"     = "weu"
+# "northeurope"    = "neu"
+# "swedencentral"  = "sece"
+
+# ── Region 0 ─────────────────────────────────
+azure_region_0_name = "swedencentral"
+azure_region_0_abbr = "sece"
+
+# ── Region 1 ─────────────────────────────────
+azure_region_1_name = "centralus"
+azure_region_1_abbr = "cus"
+
+# ── Feature toggles ─────────────────────────
+create_vhub01     = false   # Set true to deploy the second region
+add_firewall00    = false
+add_firewall01    = false
+add_private_dns00 = false
+add_private_dns01 = false
+
+# ── VM sizing ────────────────────────────────
+vm00_size = "Standard_B2s"
+vm01_size = "Standard_B2s"

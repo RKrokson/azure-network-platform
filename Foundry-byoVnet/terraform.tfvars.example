@@ -1,0 +1,22 @@
+# ─────────────────────────────────────────────
+# Foundry (BYO VNet) — Example config
+# ─────────────────────────────────────────────
+# Copy this file to terraform.tfvars and edit.
+# Requires Networking module deployed first.
+
+# ── VNet address space ───────────────────────
+# Block 2 (172.20.32.0/20) — must not overlap Networking or Foundry-managedVnet
+ai_vnet_address_space          = ["172.20.32.0/20"]
+ai_foundry_subnet_address      = ["172.20.32.0/26"]
+private_endpoint_subnet_address = ["172.20.33.0/24"]
+
+# ── GPT model deployment ────────────────────
+gpt_model_deployment_name = "gpt-5.4"
+gpt_model_name            = "gpt-5.4"
+gpt_model_version         = "2026-03-05"
+gpt_model_sku_name        = "GlobalStandard"
+gpt_model_capacity        = 1
+
+# ── Service SKUs ─────────────────────────────
+# ai_search_sku = "standard"
+# foundry_sku   = "S0"

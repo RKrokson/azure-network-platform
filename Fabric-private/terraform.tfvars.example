@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────
+# Fabric (BYO VNet) — Example config
+# ─────────────────────────────────────────────
+# Copy this file to terraform.tfvars and edit.
+# Requires Networking module deployed first (add_private_dns00 = true).
+# Requires one-time tenant setup: ./configure-fabric-tenant-settings.ps1
+
+# ── VNet address space ───────────────────────
+# Block 5 (172.20.80.0/20) — must not overlap other modules
+# fabric_vnet_address_space = ["172.20.80.0/20"]
+# pe_subnet_address         = ["172.20.80.0/24"]
+
+# ── Fabric capacity ─────────────────────────
+# fabric_capacity_sku = "F2"
+
+# ── Capacity admins ──────────────────────────
+# Defaults to current az-signed-in user if both are unset.
+# For shared labs, use one of:
+# capacity_admin_upn_list          = ["user@contoso.com"]
+# capacity_admin_group_object_id   = "00000000-0000-0000-0000-000000000000"
+
+# ── Workspace content ────────────────────────
+# workspace_content_mode = "none"       # 'none' (default) = empty workspace; 'lakehouse' = deploys a native OneLake-backed Lakehouse
+
+# ── Network mode ─────────────────────────────
+# network_mode = "inbound_only"         # default: workspace PE + deny-public-access. No MPEs/storage/SQL/KV.
+#                                       # "outbound_only":        MPEs + storage + SQL + KV. No workspace PE. Good for orgs without inbound network rules enabled.
+#                                       # "inbound_and_outbound": full private connectivity in both directions.

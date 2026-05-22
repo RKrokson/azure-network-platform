@@ -1,0 +1,27 @@
+# ─────────────────────────────────────────────
+# Container Apps (BYO VNet) — Example config
+# ─────────────────────────────────────────────
+# Copy this file to terraform.tfvars and edit.
+# Requires Networking module deployed first.
+
+# ── VNet address space ───────────────────────
+# Block 4 (172.20.64.0/20) — must not overlap Networking or other app LZs
+# aca_vnet_address_space = ["172.20.64.0/20"]
+# aca_subnet_address     = ["172.20.64.0/27"]
+# pe_subnet_address      = ["172.20.65.0/24"]
+
+# ── Container Apps Environment ───────────────
+# add_dedicated_workload_profile = true  # Adds a D4 dedicated workload profile
+
+# ── Azure Container Registry ────────────────
+# acr_sku = "Premium"  # Must be Premium for private endpoints
+
+# ── Container App Mode ────────────────────────
+# app_mode controls what gets deployed:
+#   "none"        — ACA environment + ACR only, no container app
+#   "hello-world" — MCR quickstart image for verification (default)
+#   "mcp-toolbox" — MCP Toolkit server, built and pushed to ACR via az acr build
+# app_mode = "hello-world"
+
+# ── MCP Toolbox Options ─────────────────────
+# mcp_dashboard_enabled = true  # Enables /dashboard and /api/* diagnostic endpoints (mcp-toolbox mode only)
