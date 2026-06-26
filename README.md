@@ -16,12 +16,12 @@ This repo follows a two-tier landing zone pattern:
 
 **Application Landing Zones** — Optional workloads that plug into the platform. Deploy one or more application modules. Each creates its own spoke VNet with a dedicated address range, so there are no CIDR conflicts.
 
-| Folder                    | Layer       | Description                                                   | Docs                                         |
-| ------------------------- | ----------- | ------------------------------------------------------------- | -------------------------------------------- |
-| `Foundry-byoVnet/`        | Application | AI Foundry with private endpoints in a BYO VNet               | [README](./Foundry-byoVnet/README.md)        |
-| `Foundry-managedVnet/`    | Application | AI Foundry with private endpoints in a Microsoft-managed VNet | [README](./Foundry-managedVnet/README.md)    |
-| `ContainerApps-byoVnet/`  | Application | Container Apps with ACR in a BYO VNet                         | [README](./ContainerApps-byoVnet/README.md)  |
-| `Fabric-private/`         | Application | Microsoft Fabric with workspace PE (private inbound) + 3 MPEs to LZ-local resources (Storage, SQL, KV). Sweden Central. | [README](./Fabric-private/README.md) |
+| Folder                   | Layer       | Description                                                                                                             | Docs                                        |
+| ------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `Foundry-byoVnet/`       | Application | AI Foundry with private endpoints in a BYO VNet                                                                         | [README](./Foundry-byoVnet/README.md)       |
+| `Foundry-managedVnet/`   | Application | AI Foundry with private endpoints in a Microsoft-managed VNet                                                           | [README](./Foundry-managedVnet/README.md)   |
+| `ContainerApps-byoVnet/` | Application | Container Apps with ACR in a BYO VNet                                                                                   | [README](./ContainerApps-byoVnet/README.md) |
+| `Fabric-private/`        | Application | Microsoft Fabric with workspace PE (private inbound) + 3 MPEs to LZ-local resources (Storage, SQL, KV). Sweden Central. | [README](./Fabric-private/README.md)        |
 
 Future modules will follow the same application landing zone pattern. See the [Adding a New Application Landing Zone](./docs/adding-application-landing-zone.md) guide.
 
@@ -37,11 +37,13 @@ Future modules will follow the same application landing zone pattern. See the [A
 1. Clone the repo and cd into it.
 
 2. Set your subscription:
+
    ```powershell
    .\setSubscription.ps1
    ```
 
 3. Deploy the **platform landing zone**:
+
    ```sh
    cd Networking
    terraform init && terraform apply
@@ -61,6 +63,7 @@ See each module's README for details.
 ⚠️ **Destroy application landing zones first, then the platform.**
 
 1. Destroy a Foundry module:
+
    ```sh
    cd Foundry-byoVnet   # or Foundry-managedVnet
    terraform destroy
@@ -88,10 +91,6 @@ Rough estimate using Central US, single region:
 | Azure vWAN                   | $6          | $182.50        |
 | Azure Firewall Premium       | $42         | $1,277.50      |
 | VM (Standard_B2s w/ Windows) | $1.19       | $36.21         |
-
-## Development
-
-This repo uses [Squad](https://bradygaster.github.io/squad/) for AI-assisted development. The `.squad/` folder contains agent configuration for that workflow. Squad is not required to deploy any of the environments here; you can ignore that folder entirely.
 
 ## Disclaimer
 
