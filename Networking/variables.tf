@@ -32,22 +32,6 @@ variable "azure_region_1_name" {
   type        = string
   default     = "centralus"
 }
-# KV variables
-variable "kv_name" {
-  description = "Key Vault Name"
-  type        = string
-  default     = "kv00"
-}
-variable "resource_group_name_kv" {
-  description = "Resource Group Name for Key Vault"
-  type        = string
-  default     = "rg-kv00"
-}
-variable "kv_secret_name" {
-  description = "Secret Name"
-  type        = string
-  default     = "kvsecret-vmpassword"
-}
 # Region 0 permanent resources
 variable "resource_group_name_net00" {
   description = "Resource Group Name for Region 0 Networking"
@@ -212,7 +196,7 @@ variable "vm00_size" {
 variable "vm_admin_username" {
   description = "Virtual Machine Admin Username"
   type        = string
-  default     = "adminuser"
+  default     = "localadmin"
 }
 ## Firewall variables for region 0
 variable "add_firewall00" {

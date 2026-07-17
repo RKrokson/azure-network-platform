@@ -6,8 +6,8 @@
 
 ########## Local Key Vault (LZ-scoped, MPE target)
 ##########
-# Lives in the Fabric LZ resource group so destroy doesn't leave orphaned PE
-# connections on the shared Networking KV. Workspace reaches it via MPE 3.
+# Lives in the Fabric LZ resource group so the vault and its private endpoint
+# remain scoped to the application landing zone lifecycle. Workspace reaches it via MPE 3.
 
 resource "azurerm_key_vault" "fabric_kv" {
   count               = local.deploy_outbound ? 1 : 0 # outbound gate — KV is the MPE target, not needed for inbound-only

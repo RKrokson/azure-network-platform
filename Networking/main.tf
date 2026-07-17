@@ -35,7 +35,7 @@ module "region0" {
   virtual_wan_id             = azurerm_virtual_wan.vwan.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.law00.id
   vm_admin_username          = var.vm_admin_username
-  vm_admin_password          = data.azurerm_key_vault_secret.vm_password.value
+  vm_admin_password          = random_password.vm_password.result
 
   # Hub
   hub_name           = var.azurerm_virtual_hub00_name
@@ -98,7 +98,7 @@ module "region1" {
   virtual_wan_id             = azurerm_virtual_wan.vwan.id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.law00.id
   vm_admin_username          = var.vm_admin_username
-  vm_admin_password          = data.azurerm_key_vault_secret.vm_password.value
+  vm_admin_password          = random_password.vm_password.result
 
   # Hub
   hub_name           = var.azurerm_virtual_hub01_name
@@ -146,4 +146,3 @@ module "region1" {
   vm_name           = var.vm01_name
   vm_size           = var.vm01_size
 }
-

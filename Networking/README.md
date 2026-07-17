@@ -51,7 +51,6 @@ Application landing zones consume these outputs via `terraform_remote_state`. Se
 | ------------------------------------------------------- | ----------------------------------------------------------- |
 | `rg_net00_id`, `rg_net00_name`, `rg_net00_location`     | Networking resource group                                   |
 | `vhub00_id`, `vhub01_id`                                | Virtual hub IDs (vhub01 is null if `create_vhub01 = false`) |
-| `key_vault_id`, `key_vault_name`                        | Key Vault (stores VM admin password)                        |
 | `log_analytics_workspace_id`                            | Log Analytics (firewall logs go here)                       |
 | `dns_resolver_policy00_id`, `dns_inbound_endpoint00_ip` | Private DNS (null if disabled)                              |
 | `firewall_private_ip00`                                 | Firewall private IP (null if not deployed)                  |
@@ -75,13 +74,22 @@ For contributors: Networking uses an internal `modules/region-hub/` child module
 
 ```
 Networking/
-├── main.tf, vwan.tf, keyvault.tf, variables.tf, outputs.tf
+├── main.tf, vwan.tf, credentials.tf, variables.tf, outputs.tf
 └── modules/region-hub/
     ├── main.tf (per-region hub, VNet, firewall, DNS, compute)
     └── variables.tf, outputs.tf
 ```
 
 ## Notes
+
+**VM credentials:** Terraform generates one password shared by the regional test VMs. The username includes the deployment's random numeric suffix. Retrieve both values explicitly when connecting through Bastion:
+
+```sh
+terraform output -raw vm_admin_username
+terraform output -raw vm_admin_password
+```
+
+The password is stored in the local Terraform state. State files are excluded from Git and should be deleted with the lab.
 
 **Firewall:** Deployed with Routing Intent enabled. Default policy is allow-all. Update rules as needed.
 

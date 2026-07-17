@@ -31,7 +31,7 @@ There is no dedicated test suite in this repo. Treat module-scoped `terraform va
 
 The repo uses a two-tier landing-zone model:
 
-- `Networking/` is the platform landing zone. It deploys Azure Virtual WAN, virtual hubs, shared spoke VNets, a test VM, Key Vault, Log Analytics, and optional Azure Firewall, Private DNS Resolver, and a second region.
+- `Networking/` is the platform landing zone. It deploys Azure Virtual WAN, virtual hubs, shared spoke VNets, a test VM, Log Analytics, and optional Azure Firewall, Private DNS Resolver, and a second region.
 - Application landing zones live in root-level folders such as `Foundry-byoVnet/`, `Foundry-managedVnet/`, `ContainerApps-byoVnet/`, and `Fabric-private/`. Each creates its own spoke VNet and connects to the platform vHub.
 - Application modules read platform outputs with `data "terraform_remote_state" "networking"` from `../Networking/terraform.tfstate`. Deploy `Networking/` first.
 - Private networking workloads generally require `add_private_dns00 = true` in `Networking/terraform.tfvars`. Existing app modules enforce this with Terraform `check` blocks.

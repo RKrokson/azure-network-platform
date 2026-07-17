@@ -41,7 +41,7 @@ resource "azurerm_resource_group" "rg" {
 
 ## Available Platform Outputs
 
-The Networking module exposes resource group info, subnet IDs, hub IDs, Key Vault, Log Analytics, and private DNS zone IDs. See the full list in the [Networking README outputs table](../Networking/README.md#outputs--platform-to-alz-contract).
+The Networking module exposes resource group info, subnet IDs, hub IDs, Log Analytics, and private DNS zone IDs. See the full list in the [Networking README outputs table](../Networking/README.md#outputs--platform-to-alz-contract).
 
 Key outputs you will likely need:
 
@@ -50,7 +50,7 @@ Key outputs you will likely need:
 - `add_firewall00` to set `internet_security_enabled` on hub connections
 - `dns_resolver_policy00_id` and `dns_inbound_endpoint00_ip` for private DNS integration
 - `dns_zone_*` outputs for private endpoint DNS zone links
-- `key_vault_id` and `log_analytics_workspace_id` for shared services
+- `log_analytics_workspace_id` for shared diagnostics
 
 Each ALZ module creates its own spoke VNet and subnets. DNS zone outputs return `null` when `add_private_dns00 = false` in the Networking module.
 

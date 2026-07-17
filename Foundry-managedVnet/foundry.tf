@@ -237,10 +237,10 @@ resource "terraform_data" "managed_network_isolation" {
   ]
 }
 
-resource "azapi_resource" "test_outbound_rule" {
+resource "azapi_resource" "openAI_outbound_rule" {
   count          = var.foundry_mvnet_fw_aoao ? 1 : 0
   type      = "Microsoft.CognitiveServices/accounts/managedNetworks/outboundRules@2026-03-15-preview"
-  name      = "test-fqdn-rule"
+  name      = "openai-fqdn-rule"
   parent_id = "${azapi_resource.foundry.id}/managedNetworks/default"
 
   schema_validation_enabled = false

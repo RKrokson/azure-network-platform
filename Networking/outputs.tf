@@ -3,6 +3,11 @@ output "vm_admin_username" {
   value       = module.region0.vm_admin_username
   sensitive   = true
 }
+output "vm_admin_password" {
+  description = "Shared virtual machine administrator password for Bastion access"
+  value       = random_password.vm_password.result
+  sensitive   = true
+}
 output "rg_net00_id" {
   description = "The ID of the Networking Resource Group."
   value       = azurerm_resource_group.rg-net00.id
@@ -29,16 +34,6 @@ output "vhub01_id" {
 output "log_analytics_workspace_id" {
   description = "The ID of the Log Analytics Workspace"
   value       = azurerm_log_analytics_workspace.law00.id
-}
-
-# Key Vault
-output "key_vault_id" {
-  description = "The ID of Key Vault"
-  value       = azurerm_key_vault.kv00.id
-}
-output "key_vault_name" {
-  description = "The name of Key Vault"
-  value       = azurerm_key_vault.kv00.name
 }
 
 # Private DNS Zone IDs (constructed from the RG that hosts them)
