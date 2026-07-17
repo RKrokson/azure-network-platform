@@ -20,3 +20,6 @@ gpt_model_capacity        = 1
 # ── Service SKUs ─────────────────────────────
 # ai_search_sku = "standard"
 # foundry_sku   = "S0"
+
+# ── Foundry mvnet variables ─────────────────────────────
+# foundry_mvnet_fw_aoao = true

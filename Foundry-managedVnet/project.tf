@@ -170,17 +170,6 @@ resource "time_sleep" "wait_rbac" {
   create_duration = "90s"
 }
 
-# Wait duration from PG-validated reference implementation. Do not reduce without testing.
-resource "time_sleep" "wait_outbound_rules" {
-  create_duration = "600s"
-
-  depends_on = [
-    azapi_resource.storage_outbound_rule,
-    azapi_resource.cosmos_outbound_rule,
-    azapi_resource.aisearch_outbound_rule
-  ]
-}
-
 ## Create the Foundry project capability host
 ##
 resource "azapi_resource" "foundry_project_capability_host" {
@@ -219,9 +208,6 @@ resource "azapi_resource" "foundry_project_capability_host" {
     time_sleep.wait_rbac,
     # CRITICAL: All outbound rules must be created AND provisioned before capability host
     # The capability host validates that outbound rules exist and are in Succeeded state
-    azapi_resource.storage_outbound_rule,
-    azapi_resource.cosmos_outbound_rule,
-    azapi_resource.aisearch_outbound_rule,
-    time_sleep.wait_outbound_rules
+    terraform_data.managed_network_ready
   ]
 }

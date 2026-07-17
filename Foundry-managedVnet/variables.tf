@@ -75,3 +75,11 @@ variable "foundry_sku" {
   type        = string
   default     = "S0"
 }
+
+## Foundry mvnet variables
+
+variable "foundry_mvnet_fw_aoao" {
+  description = "Flag to enable Foundry managed VNet firewall AOAO"
+  type        = bool
+  default     = false
+}
