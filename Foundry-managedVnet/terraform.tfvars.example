@@ -6,9 +6,8 @@
 
 # ── VNet address space ───────────────────────
 # Block 3 (172.20.48.0/20) — must not overlap Networking or Foundry-byoVnet
-ai_vnet_address_space          = ["172.20.48.0/20"]
-ai_foundry_subnet_address      = ["172.20.48.0/26"]
-private_endpoint_subnet_address = ["172.20.49.0/24"]
+ai_vnet_address_space           = ["172.20.48.0/20"]
+private_endpoint_subnet_address = ["172.20.48.0/24"]
 
 # ── GPT model deployment ────────────────────
 gpt_model_deployment_name = "gpt-5.4"
@@ -21,5 +20,6 @@ gpt_model_capacity        = 1
 # ai_search_sku = "standard"
 # foundry_sku   = "S0"
 
-# ── Foundry mvnet variables ─────────────────────────────
-# foundry_mvnet_fw_aoao = true
+# ── Foundry managed VNet ─────────────────────
+# Deploy the managed firewall and use Allow Only Approved Outbound.
+foundry_mvnet_fw_aoao = true

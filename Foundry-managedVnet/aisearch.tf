@@ -29,10 +29,7 @@ resource "azapi_resource" "ai_search" {
       disableLocalAuth = true
 
       # Networking-related controls
-      publicNetworkAccess = "disabled"
-      networkRuleSet = {
-        bypass = "None"
-      }
+      publicNetworkAccess = "enabled"
     }
   }
 }

@@ -10,22 +10,6 @@ resource "azurerm_virtual_network" "ai_vnet" {
   tags                = local.common_tags
 }
 
-# Foundry workload subnet (Microsoft.App delegation — reserved for future use with managed VNet)
-resource "azurerm_subnet" "ai_foundry_subnet" {
-  name                 = "${var.ai_foundry_subnet_name}-${data.terraform_remote_state.networking.outputs.azure_region_0_abbr}"
-  resource_group_name  = azurerm_resource_group.rg-ai01.name
-  virtual_network_name = azurerm_virtual_network.ai_vnet.name
-  address_prefixes     = var.ai_foundry_subnet_address
-
-  delegation {
-    name = "Microsoft.App"
-    service_delegation {
-      name    = "Microsoft.App/environments"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
-    }
-  }
-}
-
 # Private endpoint subnet
 resource "azurerm_subnet" "private_endpoint_subnet" {
   name                            = "${var.private_endpoint_subnet_name}-${data.terraform_remote_state.networking.outputs.azure_region_0_abbr}"
@@ -46,19 +30,6 @@ resource "azurerm_network_security_group" "pe_subnet_nsg" {
 resource "azurerm_subnet_network_security_group_association" "pe_subnet_nsg_assoc" {
   subnet_id                 = azurerm_subnet.private_endpoint_subnet.id
   network_security_group_id = azurerm_network_security_group.pe_subnet_nsg.id
-}
-
-# NSG for Foundry subnet — empty per Ryan's directive (vWAN firewall handles egress)
-resource "azurerm_network_security_group" "ai_foundry_subnet_nsg" {
-  name                = "nsg-foundry-${data.terraform_remote_state.networking.outputs.azure_region_0_abbr}-${random_string.unique.result}"
-  location            = azurerm_resource_group.rg-ai01.location
-  resource_group_name = azurerm_resource_group.rg-ai01.name
-  tags                = local.common_tags
-}
-
-resource "azurerm_subnet_network_security_group_association" "ai_foundry_subnet_nsg_assoc" {
-  subnet_id                 = azurerm_subnet.ai_foundry_subnet.id
-  network_security_group_id = azurerm_network_security_group.ai_foundry_subnet_nsg.id
 }
 
 # Connect AI spoke VNet to vHub

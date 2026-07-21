@@ -17,16 +17,6 @@ variable "ai_vnet_address_space" {
   type        = list(string)
   default     = ["172.20.48.0/20"]
 }
-variable "ai_foundry_subnet_name" {
-  description = "Foundry workload subnet name (Microsoft.App delegation)"
-  type        = string
-  default     = "ai-foundry-subnet"
-}
-variable "ai_foundry_subnet_address" {
-  description = "Foundry workload subnet address prefix"
-  type        = list(string)
-  default     = ["172.20.48.0/26"]
-}
 variable "private_endpoint_subnet_name" {
   description = "Private endpoint subnet name"
   type        = string
@@ -35,7 +25,7 @@ variable "private_endpoint_subnet_name" {
 variable "private_endpoint_subnet_address" {
   description = "Private endpoint subnet address prefix"
   type        = list(string)
-  default     = ["172.20.49.0/24"]
+  default     = ["172.20.48.0/24"]
 }
 ## GPT model deployment variables
 variable "gpt_model_deployment_name" {
@@ -79,7 +69,7 @@ variable "foundry_sku" {
 ## Foundry mvnet variables
 
 variable "foundry_mvnet_fw_aoao" {
-  description = "Flag to enable Foundry managed VNet firewall AOAO"
+  description = "Enable the Foundry managed VNet firewall with Allow Only Approved Outbound"
   type        = bool
   default     = false
 }

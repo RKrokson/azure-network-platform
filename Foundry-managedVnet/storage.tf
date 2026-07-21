@@ -12,7 +12,6 @@ resource "azurerm_storage_account" "storage_account" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
 
-  ## Identity configuration
   shared_access_key_enabled = false
 
   # Ignore changes to queue/blob/file/table properties to avoid validation issues
@@ -25,15 +24,10 @@ resource "azurerm_storage_account" "storage_account" {
   }
 
   ## Network access configuration
+  public_network_access_enabled = false
   min_tls_version                 = "TLS1_2"
   allow_nested_items_to_be_public = false
   tags                            = local.common_tags
-  network_rules {
-    default_action = "Deny"
-    bypass = [
-      "AzureServices"
-    ]
-  }
 }
 
 # Private Endpoint for Blob

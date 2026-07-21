@@ -28,14 +28,10 @@ resource "azapi_resource" "foundry" {
     properties = {
 
       # Support Entra ID and disable API Key authentication for underlining Cognitive Services account
-      disableLocalAuth = true
-
-      # Specifies that this is a Foundry resource
+      disableLocalAuth       = true
+      apiProperties          = {}
       allowProjectManagement = true
-
-      # Set custom subdomain name for DNS names created for this Foundry resource
-      customSubDomainName = "foundry${random_string.unique.result}"
-
+      customSubDomainName    = "foundry${random_string.unique.result}"
       # Network-related controls
       # Disable public access but allow Trusted Azure Services exception
       publicNetworkAccess = "Disabled"
@@ -76,6 +72,12 @@ resource "azapi_resource" "foundry" {
       body["properties"]["restore"],
     ]
   }
+
+  depends_on = [
+    azurerm_storage_account.storage_account,
+    azurerm_cosmosdb_account.cosmosdb,
+    azapi_resource.ai_search
+  ]
 }
 
 # Create Private Endpoints for foundry
@@ -133,7 +135,8 @@ resource "azurerm_cognitive_deployment" "foundry_deployment_gpt_4o" {
 
 # Managed Network Configuration
 
-# Managed Network readiness gate.
+# Allow Internet Outbound is the default managed VNet mode and does not use these resources.
+# This readiness gate is created only when Allow Only Approved Outbound is enabled.
 # When the account is created with networkInjections[].useMicrosoftManagedNetwork = true,
 # the platform provisions managedNetworks/default and the userOwned-resource PE outbound
 # rules automatically (Terraform does not declare or own them). This polls that GET until
@@ -145,7 +148,8 @@ resource "azurerm_cognitive_deployment" "foundry_deployment_gpt_4o" {
 # NOTE: uses PowerShell + az CLI; intended for Windows. On Linux/macOS, swap the
 # interpreter to ["/bin/bash","-c"] and port the script.
 resource "terraform_data" "managed_network_ready" {
-  count          = var.foundry_mvnet_fw_aoao ? 1 : 0
+  count = var.foundry_mvnet_fw_aoao ? 1 : 0
+
   triggers_replace = [azapi_resource.foundry.id]
 
   provisioner "local-exec" {
@@ -186,7 +190,8 @@ resource "terraform_data" "managed_network_ready" {
 }
 
 resource "terraform_data" "managed_network_isolation" {
-  count          = var.foundry_mvnet_fw_aoao ? 1 : 0
+  count = var.foundry_mvnet_fw_aoao ? 1 : 0
+
   triggers_replace = [azapi_resource.foundry.id]
 
   input = {
@@ -237,10 +242,11 @@ resource "terraform_data" "managed_network_isolation" {
   ]
 }
 
-resource "azapi_resource" "openAI_outbound_rule" {
-  count          = var.foundry_mvnet_fw_aoao ? 1 : 0
+resource "azapi_resource" "foundry_fqdn_outbound_rules" {
+  count = var.foundry_mvnet_fw_aoao ? length(local.foundry_mvnet_fqdn_outbound_rules) : 0
+
   type      = "Microsoft.CognitiveServices/accounts/managedNetworks/outboundRules@2026-03-15-preview"
-  name      = "openai-fqdn-rule"
+  name      = local.foundry_mvnet_fqdn_outbound_rules[count.index].name
   parent_id = "${azapi_resource.foundry.id}/managedNetworks/default"
 
   schema_validation_enabled = false
@@ -248,8 +254,36 @@ resource "azapi_resource" "openAI_outbound_rule" {
   body = {
     properties = {
       type        = "FQDN"
-      destination = "*.openai.azure.com"
+      destination = local.foundry_mvnet_fqdn_outbound_rules[count.index].destination
       category    = "UserDefined"
+    }
+  }
+
+  depends_on = [
+    azapi_resource.foundry,
+    azurerm_role_assignment.foundry_network_connection_approver,
+    terraform_data.managed_network_isolation
+  ]
+}
+
+resource "azapi_resource" "foundry_service_tag_outbound_rules" {
+  count = var.foundry_mvnet_fw_aoao ? length(local.foundry_mvnet_service_tag_outbound_rules) : 0
+
+  type      = "Microsoft.CognitiveServices/accounts/managedNetworks/outboundRules@2026-03-15-preview"
+  name      = local.foundry_mvnet_service_tag_outbound_rules[count.index].name
+  parent_id = "${azapi_resource.foundry.id}/managedNetworks/default"
+
+  schema_validation_enabled = false
+
+  body = {
+    properties = {
+      type = "ServiceTag"
+      destination = {
+        serviceTag = local.foundry_mvnet_service_tag_outbound_rules[count.index].service_tag
+        protocol   = "TCP"
+        portRanges = "443"
+      }
+      category = "UserDefined"
     }
   }
 

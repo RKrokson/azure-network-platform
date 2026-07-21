@@ -11,7 +11,7 @@ resource "azapi_resource" "foundry_project" {
     azurerm_private_endpoint.pe-foundry
   ]
 
-  type      = "Microsoft.CognitiveServices/accounts/projects@2025-04-01-preview"
+  type      = "Microsoft.CognitiveServices/accounts/projects@2026-03-01"
   name      = "project${random_string.unique.result}"
   parent_id = azapi_resource.foundry.id
   location  = azurerm_resource_group.rg-ai01.location
@@ -47,7 +47,7 @@ resource "time_sleep" "wait_project_identities" {
 ## Create Foundry project connections
 ##
 resource "azapi_resource" "conn_cosmosdb" {
-  type      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-10-01-preview"
+  type      = "Microsoft.CognitiveServices/accounts/projects/connections@2026-03-01"
   name      = azurerm_cosmosdb_account.cosmosdb.name
   parent_id = azapi_resource.foundry_project.id
 
@@ -55,7 +55,7 @@ resource "azapi_resource" "conn_cosmosdb" {
 
   body = {
     properties = {
-      category = "CosmosDB"
+      category = "CosmosDb"
       target   = azurerm_cosmosdb_account.cosmosdb.endpoint
       authType = "AAD"
       metadata = {
@@ -65,12 +65,16 @@ resource "azapi_resource" "conn_cosmosdb" {
       }
     }
   }
+
+  depends_on = [
+    azapi_resource.conn_aisearch
+  ]
 }
 
 ## Create the Foundry project connection to Azure Storage Account
 ##
 resource "azapi_resource" "conn_storage" {
-  type      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-10-01-preview"
+  type      = "Microsoft.CognitiveServices/accounts/projects/connections@2026-03-01"
   name      = azurerm_storage_account.storage_account.name
   parent_id = azapi_resource.foundry_project.id
 
@@ -88,12 +92,16 @@ resource "azapi_resource" "conn_storage" {
       }
     }
   }
+
+  depends_on = [
+    azapi_resource.conn_cosmosdb
+  ]
 }
 
 ## Create the Foundry project connection to AI Search
 ##
 resource "azapi_resource" "conn_aisearch" {
-  type      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-10-01-preview"
+  type      = "Microsoft.CognitiveServices/accounts/projects/connections@2026-03-01"
   name      = azapi_resource.ai_search.name
   parent_id = azapi_resource.foundry_project.id
 
@@ -130,7 +138,7 @@ resource "azurerm_application_insights" "foundry_appinsights" {
 ## authType = "ApiKey"; target = resource ID; credentials.key = connection string (via sensitive_body)
 ##
 resource "azapi_resource" "conn_appinsights" {
-  type      = "Microsoft.CognitiveServices/accounts/projects/connections@2025-10-01-preview"
+  type      = "Microsoft.CognitiveServices/accounts/projects/connections@2026-03-01"
   name      = azurerm_application_insights.foundry_appinsights.name
   parent_id = azapi_resource.foundry_project.id
 
@@ -156,6 +164,11 @@ resource "azapi_resource" "conn_appinsights" {
       }
     }
   }
+
+
+  depends_on = [
+    azapi_resource.conn_storage
+  ]
 }
 
 # Wait duration from PG-validated reference implementation. Do not reduce without testing.
@@ -173,7 +186,7 @@ resource "time_sleep" "wait_rbac" {
 ## Create the Foundry project capability host
 ##
 resource "azapi_resource" "foundry_project_capability_host" {
-  type      = "Microsoft.CognitiveServices/accounts/projects/capabilityHosts@2025-04-01-preview"
+  type      = "Microsoft.CognitiveServices/accounts/projects/capabilityHosts@2026-03-01"
   name      = "caphostproj"
   parent_id = azapi_resource.foundry_project.id
 
@@ -206,8 +219,8 @@ resource "azapi_resource" "foundry_project_capability_host" {
     azurerm_role_assignment.search_service_contributor_foundry_project,
     # Wait for RBAC propagation
     time_sleep.wait_rbac,
-    # CRITICAL: All outbound rules must be created AND provisioned before capability host
-    # The capability host validates that outbound rules exist and are in Succeeded state
+    # When AOAO is enabled, wait for the managed network outbound rules.
+    # With the default Allow Internet Outbound mode, this resource has count = 0.
     terraform_data.managed_network_ready
   ]
 }

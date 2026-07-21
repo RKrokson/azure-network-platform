@@ -1,8 +1,5 @@
 # Application Landing Zone — AI Foundry (Managed VNet) - preview
 
-> [!WARNING]
-> **This deployment is a work in progress.** It's in preview and may not be in a working state at any given time. Expect breaking changes, incomplete features, or failed applies. Use it to experiment, not to depend on.
-
 This is an optional application landing zone. It deploys AI Foundry with AI Agent Service and private endpoints in a Microsoft-managed VNet. You do not need to deploy this to use the Networking module on its own.
 
 This module is based on the [PG-validated Terraform sample](https://github.com/microsoft-foundry/foundry-samples/tree/main/infrastructure/infrastructure-setup-terraform/18-managed-virtual-network-preview), modified to pull network dependencies from the platform landing zone via `terraform_remote_state`.
@@ -33,32 +30,31 @@ terraform init && terraform apply
 
 This module deploys AI Foundry in a Microsoft-managed VNet. Customize the resource group name or use defaults.
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `resource_group_name_ai01` | `"rg-ai01"` | Resource group name |
-| `ai_vnet_address_space` | `["172.20.48.0/20"]` | VNet address range |
-| `ai_foundry_subnet_address` | `["172.20.48.0/26"]` | Foundry workload subnet |
-| `connect_to_vhub` | `true` | Connect to platform hub |
-| `enable_dns_link` | `false` | Link to platform DNS resolver |
+| Variable                          | Default              | Purpose                                                    |
+| --------------------------------- | -------------------- | ---------------------------------------------------------- |
+| `resource_group_name_ai01`        | `"rg-ai01"`          | Resource group name                                        |
+| `ai_vnet_address_space`           | `["172.20.48.0/20"]` | VNet address range                                         |
+| `private_endpoint_subnet_address` | `["172.20.48.0/24"]` | Private endpoint subnet                                    |
+| `foundry_mvnet_fw_aoao`           | `false`              | Use the managed firewall with Allow Only Approved Outbound |
 
 For GPT deployment names, SKUs, and other service config, see `variables.tf`.
 
+By default, the Microsoft-managed VNet uses Allow Internet Outbound without a managed firewall or outbound rules. Set `foundry_mvnet_fw_aoao = true` to deploy the managed firewall, switch to Allow Only Approved Outbound, and create the [documented outbound rules](https://learn.microsoft.com/azure/foundry/how-to/managed-virtual-network#required-outbound-rules) for Agents, evaluations and traces, and finetuning. The Storage, Cosmos DB, and AI Search private endpoint rules remain platform-managed.
+
 ## Outputs
 
-| Output | Purpose |
-|--------|---------|
-| `resource_group_id` | Resource group ID |
-| `ai_foundry_id` | AI Foundry account ID |
+| Output                  | Purpose               |
+| ----------------------- | --------------------- |
+| `resource_group_id`     | Resource group ID     |
+| `ai_foundry_id`         | AI Foundry account ID |
 | `ai_foundry_project_id` | AI Foundry project ID |
-| `storage_account_id` | Storage account ID |
-| `cosmosdb_account_id` | Cosmos DB account ID |
-| `ai_search_id` | AI Search service ID |
+| `storage_account_id`    | Storage account ID    |
+| `cosmosdb_account_id`   | Cosmos DB account ID  |
+| `ai_search_id`          | AI Search service ID  |
 
 ## Cleanup
 
-⚠️ **Soft-delete gotcha:** After `terraform destroy`, Foundry enters soft-delete state with a `serviceassociationlink` to the AI subnet. You must purge it before destroying Networking, or the subnet delete will fail. Wait ~10 minutes after purge completes.
-
-- [Purge a deleted resource](https://learn.microsoft.com/en-us/azure/ai-services/recover-purge-resources?tabs=azure-cli#purge-a-deleted-resource)
+This module does not inject Foundry into the spoke VNet, so it does not create a service association link that requires manual subnet cleanup.
 
 ## Security & Privacy — Foundry Trace Logs
 

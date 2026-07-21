@@ -160,14 +160,3 @@ resource "azurerm_monitor_diagnostic_setting" "diag_foundry_project" {
     category = "AllMetrics"
   }
 }
-
-resource "azurerm_monitor_diagnostic_setting" "diag_nsg_foundry" {
-  name               = "diag-nsg-foundry-${random_string.unique.result}"
-  target_resource_id = azurerm_network_security_group.ai_foundry_subnet_nsg.id
-
-  log_analytics_workspace_id = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
-
-  enabled_log {
-    category_group = "allLogs"
-  }
-}
