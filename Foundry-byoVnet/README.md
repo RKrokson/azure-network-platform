@@ -1,12 +1,12 @@
-# Application Landing Zone — AI Foundry (BYO VNet)
+# Application Landing Zone — Microsoft Foundry (BYO VNet)
 
-This is an optional application landing zone. It deploys AI Foundry with AI Agent Service and private endpoints into its own spoke VNet. The module creates the VNet, subnets, and hub connection. You do not need to deploy this to use the Networking module on its own.
+This is an optional application landing zone. It deploys Microsoft Foundry with Agent Service and private endpoints into its own spoke VNet. The module creates the VNet, subnets, and hub connection. You do not need to deploy this to use the Networking module on its own.
 
 This module is based on the [validated Terraform sample](https://github.com/microsoft-foundry/foundry-samples/tree/main/infrastructure/infrastructure-setup-terraform/15b-private-network-standard-agent-setup-byovnet), modified to pull network dependencies from the platform landing zone via `terraform_remote_state`.
 
 "Secure" refers to the use of private endpoints. Local auth (API keys) is disabled on AI Search and Cognitive Services (`disableLocalAuth = true`). All access requires Entra ID authentication.
 
-The template follows the [documented architecture](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/virtual-networks) for AI Foundry Standard Setup with private networking (BYO VNet).
+The template follows the [documented architecture](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/virtual-networks) for Microsoft Foundry Standard Setup with private networking (BYO VNet).
 
 ![secureAIFoundry](../Diagrams/secureAIFoundry-diagram.png)
 
@@ -30,26 +30,26 @@ terraform init && terraform apply
 
 This module creates its own VNet with subnets and hub connection. Customize networking and deployment names, or use defaults.
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `resource_group_name_ai00` | `"rg-ai00"` | Resource group name |
-| `ai_vnet_address_space` | `["172.20.32.0/20"]` | VNet address range |
-| `ai_foundry_subnet_address` | `["172.20.32.0/26"]` | Foundry workload subnet |
-| `connect_to_vhub` | `true` | Connect to platform hub |
-| `enable_dns_link` | `false` | Link to platform DNS resolver |
+| Variable                    | Default              | Purpose                       |
+| --------------------------- | -------------------- | ----------------------------- |
+| `resource_group_name_ai00`  | `"rg-ai00"`          | Resource group name           |
+| `ai_vnet_address_space`     | `["172.20.32.0/20"]` | VNet address range            |
+| `ai_foundry_subnet_address` | `["172.20.32.0/26"]` | Foundry workload subnet       |
+| `connect_to_vhub`           | `true`               | Connect to platform hub       |
+| `enable_dns_link`           | `false`              | Link to platform DNS resolver |
 
 For GPT deployment names, SKUs, and other service config, see `variables.tf`.
 
 ## Outputs
 
-| Output | Purpose |
-|--------|---------|
-| `resource_group_id` | Resource group ID |
-| `ai_foundry_id` | AI Foundry account ID |
-| `ai_foundry_project_id` | AI Foundry project ID |
-| `storage_account_id` | Storage account ID |
-| `cosmosdb_account_id` | Cosmos DB account ID |
-| `ai_search_id` | AI Search service ID |
+| Output                  | Purpose                      |
+| ----------------------- | ---------------------------- |
+| `resource_group_id`     | Resource group ID            |
+| `ai_foundry_id`         | Microsoft Foundry account ID |
+| `ai_foundry_project_id` | Microsoft Foundry project ID |
+| `storage_account_id`    | Storage account ID           |
+| `cosmosdb_account_id`   | Cosmos DB account ID         |
+| `ai_search_id`          | AI Search service ID         |
 
 ## Cleanup
 

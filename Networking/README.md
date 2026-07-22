@@ -2,6 +2,8 @@
 
 This is the shared networking foundation that all application landing zones in this repo depend on. It deploys an Azure Virtual WAN environment for demos and labs (not production).
 
+This can be used for demoing or testing network platform capabilities. It can also be used as a secure networking foundation for optional application landing zones.
+
 ## What Gets Deployed
 
 **Base deployment:** Virtual WAN, virtual hub, spoke VNet, and test VM.
@@ -118,11 +120,14 @@ Cross-VNet Bastion access is not supported in this vWAN topology.
 
 **Private DNS:** Uses [Azure Verified Module](https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-pattern-modules/) — deploys all common `privatelink.*` zones except `privatelink.{dnsPrefix}.database.windows.net` (create manually if needed). See [exceptions list](https://github.com/Azure/terraform-azurerm-avm-ptn-network-private-link-private-dns-zones?tab=readme-ov-file#-private_link_private_dns_zones).
 
+> [!NOTE]
+> Terraform may report that the AzAPI `retry.multiplier` and `retry.randomization_factor` attributes are deprecated. These values come from the nested Private DNS Zone AVM used by the upstream pattern, not from this repository's Terraform configuration. The warning does not affect deployment and requires no Azure resource or state cleanup. Do not edit files under `.terraform`; the warning will be removed when the upstream AVM updates its retry schema.
+
 **Regions:** Defaults are Sweden Central (region 0) and Central US (region 1). Override in `terraform.tfvars` — update both the full name and abbreviation.
 
 ## Examples
 
-Six common configurations. See [terraform.tfvars.example](./terraform.tfvars.example) and [terraform.tfvars.advanced.example](./terraform.tfvars.advanced.example) for ready-to-use templates. Rename one to `terraform.tfvars` and set the toggles:
+Common configurations. See [terraform.tfvars.example](./terraform.tfvars.example) and [terraform.tfvars.advanced.example](./terraform.tfvars.advanced.example) for ready-to-use templates. Rename one to `terraform.tfvars` and set the toggles:
 
 ### Single Region + DNS Resolver
 

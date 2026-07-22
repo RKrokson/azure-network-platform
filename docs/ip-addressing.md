@@ -13,7 +13,7 @@ Each region uses a `/16` supernet divided into `/20` blocks. Region 0 uses `172.
 | 0 | `172.20.0.0/20` | Platform — Shared spoke VNet | See `Networking/variables.tf` |
 | 1 | `172.20.16.0/20` | Platform — DNS VNet | See `Networking/variables.tf` |
 | 2 | `172.20.32.0/20` | App LZ — **Foundry-byoVnet** | `172.20.32.0/26` (AI Foundry), `172.20.33.0/24` (Private Endpoints) |
-| 3 | `172.20.48.0/20` | App LZ — **Foundry-managedVnet** | `172.20.48.0/26` (AI Foundry), `172.20.49.0/24` (Private Endpoints) |
+| 3 | `172.20.48.0/20` | App LZ — **Foundry-managedVnet** | `172.20.48.0/24` (Private Endpoints) |
 | 4 | `172.20.64.0/20` | App LZ — **ContainerApps-byoVnet** | `172.20.64.0/27` (ACA Environment), `172.20.65.0/24` (Private Endpoints) |
 | 5 | `172.20.80.0/20` | App LZ — **Fabric-private** | `172.20.80.0/24` (Private Endpoints — workspace PE). Claimed 2026-04-26. |
 | 6–15 | `172.20.96.0/20` – `172.20.240.0/20` | **Unassigned** (future app LZs) | — |

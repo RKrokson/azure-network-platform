@@ -1,12 +1,12 @@
-# Application Landing Zone — AI Foundry (Managed VNet) - preview
+# Application Landing Zone — Microsoft Foundry (Managed VNet)
 
-This is an optional application landing zone. It deploys AI Foundry with AI Agent Service and private endpoints in a Microsoft-managed VNet. You do not need to deploy this to use the Networking module on its own.
+This is an optional application landing zone. It deploys Microsoft Foundry with Agent Service and private endpoints in a Microsoft-managed VNet. You do not need to deploy this to use the Networking module on its own.
 
-This module is based on the [PG-validated Terraform sample](https://github.com/microsoft-foundry/foundry-samples/tree/main/infrastructure/infrastructure-setup-terraform/18-managed-virtual-network-preview), modified to pull network dependencies from the platform landing zone via `terraform_remote_state`.
+This module is based on the [Microsoft's Terraform sample](https://github.com/microsoft-foundry/foundry-samples/tree/main/infrastructure/infrastructure-setup-terraform/18-managed-virtual-network-preview), modified to pull network dependencies from the platform landing zone via `terraform_remote_state`.
 
-"Secure" refers to the use of private endpoints. Local auth (API keys) is disabled on AI Search and Cognitive Services (`disableLocalAuth = true`). All access requires Entra ID authentication.
+The ALZ makes use of private endpoints. Local auth (API keys) is disabled on AI Search and Cognitive Services (`disableLocalAuth = true`). All access requires Entra ID authentication.
 
-The template follows the [documented architecture](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/managed-virtual-network?view=foundry) for AI Foundry Standard Setup with a managed network.
+The template follows the [documented architecture](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/managed-virtual-network?view=foundry) for Microsoft Foundry Standard Setup with a managed network.
 
 ![managedVnetFoundry](../Diagrams/managedVnet-diagram.png)
 
@@ -28,7 +28,7 @@ terraform init && terraform apply
 
 ## Variables
 
-This module deploys AI Foundry in a Microsoft-managed VNet. Customize the resource group name or use defaults.
+This module deploys Microsoft Foundry in a Microsoft-managed VNet. Customize the resource group name or use defaults.
 
 | Variable                          | Default              | Purpose                                                    |
 | --------------------------------- | -------------------- | ---------------------------------------------------------- |
