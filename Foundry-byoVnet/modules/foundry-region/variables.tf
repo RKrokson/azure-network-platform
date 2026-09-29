@@ -24,7 +24,7 @@ variable "platform" {
 
   validation {
     condition     = can(regex("^[a-z0-9]{1,9}$", var.platform.region_abbr))
-    error_message = "Networking ${var.region_key} region_abbr must be 1 to 9 lowercase letters or digits so the Storage account name stays within 24 characters."
+    error_message = "Networking ${var.region_key} region_abbr must be 1 to 9 lowercase letters or digits so the Storage account name stays within 24 characters (got \"${coalesce(var.platform.region_abbr, "null")}\")."
   }
 
   validation {
