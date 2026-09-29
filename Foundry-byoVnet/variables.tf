@@ -4,8 +4,20 @@ variable "resource_group_name_ai00" {
   default     = "rg-ai00"
 }
 
+## Regional deployment
+variable "deploy_region1" {
+  description = "Deploy a second, independent Foundry stack in Networking region 1. Requires Networking create_vhub01 = true and add_private_dns01 = true."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.deploy_region1 || data.terraform_remote_state.networking.outputs.alz_regions.region1.enabled
+    error_message = "deploy_region1 = true requires Networking region 1. Apply Networking with create_vhub01 = true and add_private_dns01 = true, then plan this module again."
+  }
+}
+
 ## Spoke VNet variables
-## WARNING: Defaults use Block 2 (172.20.32.0/20). Block 3 is reserved for Foundry-managedVnet.
+## WARNING: Defaults use Block 2 in each region (172.20.32.0/20 and 172.21.32.0/20). Block 3 is reserved for Foundry-managedVnet.
 ## See docs/ip-addressing.md for the full allocation table.
 variable "regional_networks" {
   description = "Spoke VNet and subnet address prefixes keyed by alz_regions key. Overriding one region requires supplying the whole map."
@@ -20,6 +32,11 @@ variable "regional_networks" {
       foundry_subnet_address          = ["172.20.32.0/26"]
       private_endpoint_subnet_address = ["172.20.33.0/24"]
     }
+    region1 = {
+      vnet_address_space              = ["172.21.32.0/20"]
+      foundry_subnet_address          = ["172.21.32.0/26"]
+      private_endpoint_subnet_address = ["172.21.33.0/24"]
+    }
   }
 
   validation {
@@ -30,6 +47,11 @@ variable "regional_networks" {
   validation {
     condition     = alltrue([for key in keys(var.regional_networks) : contains(["region0", "region1"], key)])
     error_message = "regional_networks keys must be region0 or region1. Unknown keys: ${join(", ", [for key in keys(var.regional_networks) : key if !contains(["region0", "region1"], key)])}."
+  }
+
+  validation {
+    condition     = !var.deploy_region1 || contains(keys(var.regional_networks), "region1")
+    error_message = "regional_networks must contain region1 when deploy_region1 = true."
   }
 }
 
