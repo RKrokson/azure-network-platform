@@ -47,6 +47,8 @@ Rename either to `terraform.tfvars`, set values to `true`, then `terraform plan`
 
 Application landing zone modules (`Foundry-byoVnet/`, `Foundry-managedVnet/`, `ContainerApps-byoVnet/`, and `Fabric-private/`) consume `alz_regions.region0` via `terraform_remote_state` (local backend, reads `./terraform.tfstate`). Each module creates its own spoke VNet and subnets. If a workload needs private DNS resolution, set `add_private_dns00 = true`.
 
+`Foundry-byoVnet/` also consumes `alz_regions.region1` when its `deploy_region1 = true`. That requires `create_vhub01 = true` and `add_private_dns01 = true` here.
+
 ## Outputs — Platform-to-ALZ Contract
 
 Application landing zones consume these outputs via `terraform_remote_state`. See the full list in `outputs.tf`.

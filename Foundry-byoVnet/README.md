@@ -16,6 +16,7 @@ The template follows the [documented architecture](https://learn.microsoft.com/e
 - Platform Landing Zone (`Networking/`) applied first
 - Private DNS zones enabled (`add_private_dns00 = true` in Networking)
 - Azure region with AI Foundry support and quota
+- For a second region, see [Region 1](#region-1)
 
 ## Quick Start
 
@@ -26,16 +27,47 @@ terraform init && terraform apply
 
 **Prerequisites:** Networking module must be applied first with `add_private_dns00 = true`.
 
+## Upgrading an existing deployment
+
+⚠️ This version moves every resource into `modules/foundry-region/` and adds the region abbreviation to the Foundry account and data service names. Terraform cannot carry an earlier deployment forward. Run `terraform destroy` with the version you deployed, finish the [cleanup](#cleanup) steps, then apply this version.
+
 ## Variables
 
-This module creates its own VNet with subnets and hub connection. Customize networking and deployment names, or use defaults.
+This module creates its own VNet with subnets and hub connection per region. Customize networking and deployment names, or use defaults.
 
-| Variable                     | Default              | Purpose                        |
-| ---------------------------- | -------------------- | ------------------------------ |
-| `resource_group_name_ai00`   | `"rg-ai00"`          | Resource group name            |
-| `ai_vnet_address_space`      | `["172.20.32.0/20"]` | VNet address range             |
-| `ai_foundry_subnet_address`  | `["172.20.32.0/26"]` | Foundry workload subnet        |
-| `deploy_agent_data_services` | `true`               | Deploy BYO agent data services |
+| Variable                     | Default                    | Purpose                                         |
+| ---------------------------- | --------------------------- | ----------------------------------------------- |
+| `resource_group_name_ai00`   | `"rg-ai00"`                | Resource group base name                        |
+| `deploy_region1`             | `false`                    | Deploy a second stack in Networking region 1    |
+| `regional_networks`          | See below                  | Per-region VNet and subnet address prefixes     |
+| `deploy_agent_data_services` | `true`                     | Deploy BYO agent data services in every region  |
+
+`regional_networks` defaults:
+
+| Key       | VNet             | Foundry subnet   | Private endpoint subnet |
+| --------- | ---------------- | ---------------- | ----------------------- |
+| `region0` | `172.20.32.0/20` | `172.20.32.0/26` | `172.20.33.0/24`        |
+| `region1` | `172.21.32.0/20` | `172.21.32.0/26` | `172.21.33.0/24`        |
+
+Overriding `regional_networks` replaces the whole map, so include `region0` and, when `deploy_region1 = true`, `region1`. See `docs/ip-addressing.md` before changing prefixes.
+
+For GPT deployment names, SKUs, and other service config, see `variables.tf`. Model, SKU, and data service settings apply to every deployed region.
+
+### Region 1
+
+Region 0 always deploys. Set `deploy_region1 = true` to add a second, independent stack in Networking region 1. It gets its own resource group, spoke VNet, hub connection, Foundry account, project, model deployment, private endpoints, and, when enabled, data services.
+
+Region 1 requires:
+
+- Networking applied with `create_vhub01 = true` and `add_private_dns01 = true`
+- A region 1 Azure region that supports Foundry Agent Service with BYO VNet injection
+- Quota in region 1 for the configured model and SKU
+
+If Networking region 1 is missing, `terraform plan` fails with a message naming the Networking variables to set. Networking region 1 on its own does not deploy a second Foundry stack. This module only uses it when `deploy_region1 = true`.
+
+Each stack resolves private endpoints through its own region's Private DNS. A client in region 0 cannot resolve the region 1 Foundry endpoint, so test region 1 from the region 1 test VM. The two stacks share no state and do not fail over.
+
+Region 1 roughly doubles the module's cost. With data services enabled, it adds a second AI Search service, Cosmos DB account, and Storage account.
 
 ### Agent data services
 
@@ -49,26 +81,32 @@ The module waits three minutes after creating or replacing the Foundry account b
 
 Capability hosts cannot be updated in place, so pick a value before you deploy. Changing it on a live deployment requires `terraform destroy` first.
 
-For GPT deployment names, SKUs, and other service config, see `variables.tf`.
-
 ## Outputs
 
-| Output                  | Purpose                                                    |
-| ----------------------- | ---------------------------------------------------------- |
-| `resource_group_id`     | Resource group ID                                          |
-| `ai_foundry_id`         | Microsoft Foundry account ID                               |
-| `ai_foundry_project_id` | Microsoft Foundry project ID                               |
-| `storage_account_id`    | Storage account ID, null when data services are disabled   |
-| `cosmosdb_account_id`   | Cosmos DB account ID, null when data services are disabled |
-| `ai_search_id`          | AI Search service ID, null when data services are disabled |
+`foundry_regions` is a map keyed by `region0` and, when deployed, `region1`. Each entry has:
+
+| Field                    | Purpose                                                    |
+| ------------------------ | ---------------------------------------------------------- |
+| `region_name`            | Azure region name                                          |
+| `region_abbr`            | Region abbreviation used in resource names                 |
+| `resource_group_id`      | Regional resource group ID                                 |
+| `foundry_id`             | Microsoft Foundry account ID                               |
+| `foundry_endpoint`       | Microsoft Foundry account endpoint                         |
+| `project_id`             | Microsoft Foundry project ID                               |
+| `model_deployment_names` | Model deployment names in the account                      |
+| `storage_account_id`     | Storage account ID, null when data services are disabled   |
+| `cosmosdb_account_id`    | Cosmos DB account ID, null when data services are disabled |
+| `ai_search_id`           | AI Search service ID, null when data services are disabled |
 
 ## Cleanup
 
-⚠️ **Soft-delete gotcha:** After `terraform destroy`, Foundry enters soft-delete state with a `serviceassociationlink` to the AI subnet. You must purge it before destroying Networking, or the subnet delete will fail. Wait ~10 minutes after purge completes.
+Destroy this module before Networking. Repeat the purge for every region you deployed.
+
+⚠️ **Soft-delete gotcha:** After `terraform destroy`, each Foundry account enters soft-delete state with a `serviceassociationlink` to its region's AI subnet. You must purge every soft-deleted account before destroying Networking, or the subnet delete will fail. Wait ~10 minutes after each purge completes.
 
 - [Purge a deleted resource](https://learn.microsoft.com/en-us/azure/ai-services/recover-purge-resources?tabs=azure-cli#purge-a-deleted-resource)
 
-⚠️ **Orphaned Service Association Link:** Another issue could be an orphaned service association link (SAL). The AI subnet uses a SAL to the Microsoft-managed environment behind the scenes, and the SAL is owned by the Microsoft backend. If you’re unable to delete the AI subnet due to an existing SAL, remove the service association from the subnet and wait 48-72 hours for the backend cleanup process to complete; then you should be able to delete the VNet.
+⚠️ **Orphaned Service Association Link:** Another issue could be an orphaned service association link (SAL). Each AI subnet uses a SAL to the Microsoft-managed environment behind the scenes, and the SAL is owned by the Microsoft backend. If you’re unable to delete an AI subnet due to an existing SAL, remove the service association from the subnet and wait 48-72 hours for the backend cleanup process to complete; then you should be able to delete the VNet.
 
 ## Security & Privacy — Foundry Trace Logs
 
