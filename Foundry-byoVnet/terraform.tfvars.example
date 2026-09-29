@@ -4,13 +4,29 @@
 # Copy this file to terraform.tfvars and edit.
 # Requires Networking module deployed first.
 
+# ── Regions ──────────────────────────────────
+# Region 0 always deploys. Set to true to add an independent stack in
+# Networking region 1 (requires create_vhub01 and add_private_dns01).
+# deploy_region1 = false
+
 # ── VNet address space ───────────────────────
-# Block 2 (172.20.32.0/20) — must not overlap Networking or Foundry-managedVnet
-ai_vnet_address_space          = ["172.20.32.0/20"]
-ai_foundry_subnet_address      = ["172.20.32.0/26"]
-private_endpoint_subnet_address = ["172.20.33.0/24"]
+# Block 2 in each region — must not overlap Networking or Foundry-managedVnet.
+# Overriding this replaces the whole map.
+regional_networks = {
+  region0 = {
+    vnet_address_space              = ["172.20.32.0/20"]
+    foundry_subnet_address          = ["172.20.32.0/26"]
+    private_endpoint_subnet_address = ["172.20.33.0/24"]
+  }
+  region1 = {
+    vnet_address_space              = ["172.21.32.0/20"]
+    foundry_subnet_address          = ["172.21.32.0/26"]
+    private_endpoint_subnet_address = ["172.21.33.0/24"]
+  }
+}
 
 # ── GPT model deployment ────────────────────
+# Applies to every deployed region.
 gpt_model_deployment_name = "gpt-5.4"
 gpt_model_name            = "gpt-5.4"
 gpt_model_version         = "2026-03-05"

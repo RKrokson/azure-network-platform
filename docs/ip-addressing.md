@@ -24,7 +24,7 @@ Each region uses a `/16` supernet divided into `/20` blocks. Region 0 uses `172.
 |---------|------|-------------|---------|
 | 0 | `172.21.0.0/20` | Platform — Shared spoke VNet | See `Networking/variables.tf` |
 | 1 | `172.21.16.0/20` | Platform — DNS VNet | See `Networking/variables.tf` |
-| 2 | `172.21.32.0/20` | Reserved — Foundry-byoVnet (region 1, future) | — |
+| 2 | `172.21.32.0/20` | App LZ — **Foundry-byoVnet** (optional, `deploy_region1 = true`) | `172.21.32.0/26` (AI Foundry), `172.21.33.0/24` (Private Endpoints) |
 | 3 | `172.21.48.0/20` | Reserved — Foundry-managedVnet (region 1, future) | — |
 | 4 | `172.21.64.0/20` | Reserved — ContainerApps-byoVnet (region 1, future) | — |
 | 5 | `172.21.80.0/20` | Reserved — Fabric-private (region 1, future) | — |
