@@ -5,11 +5,11 @@
 ##
 resource "azapi_resource" "foundry" {
   type                      = "Microsoft.CognitiveServices/accounts@2025-06-01"
-  name                      = "aifoundry${random_string.unique.result}"
+  name                      = local.account_name
   parent_id                 = azurerm_resource_group.rg-ai00.id
   location                  = azurerm_resource_group.rg-ai00.location
   schema_validation_enabled = false
-  tags                      = local.common_tags
+  tags                      = var.common_tags
 
   body = {
     kind = "AIServices",
@@ -30,7 +30,7 @@ resource "azapi_resource" "foundry" {
       allowProjectManagement = true
 
       # Set custom subdomain name for DNS names created for this Foundry resource
-      customSubDomainName = "aifoundry${random_string.unique.result}"
+      customSubDomainName = local.account_name
 
       # Network-related controls
       # Disable public access but allow Trusted Azure Services exception
@@ -52,6 +52,10 @@ resource "azapi_resource" "foundry" {
       ]
     }
   }
+
+  response_export_values = [
+    "properties.endpoint"
+  ]
 }
 
 ## Create a deployment for OpenAI's GPT-5.4 (2026-03-05) in the AI Foundry resource
@@ -102,7 +106,7 @@ resource "azurerm_private_endpoint" "pe-aifoundry" {
   resource_group_name = azurerm_resource_group.rg-ai00.name
   location            = azurerm_resource_group.rg-ai00.location
   subnet_id           = azurerm_subnet.private_endpoint_subnet.id
-  tags                = local.common_tags
+  tags                = var.common_tags
 
   private_service_connection {
     name                           = "${azapi_resource.foundry.name}-private-link-service-connection"
@@ -116,9 +120,9 @@ resource "azurerm_private_endpoint" "pe-aifoundry" {
   private_dns_zone_group {
     name = "${azapi_resource.foundry.name}-dns-config"
     private_dns_zone_ids = [
-      local.platform_region0.private_dns_zone_ids.cognitiveservices,
-      local.platform_region0.private_dns_zone_ids.services_ai,
-      local.platform_region0.private_dns_zone_ids.openai
+      var.platform.private_dns_zone_ids.cognitiveservices,
+      var.platform.private_dns_zone_ids.services_ai,
+      var.platform.private_dns_zone_ids.openai
     ]
   }
 }

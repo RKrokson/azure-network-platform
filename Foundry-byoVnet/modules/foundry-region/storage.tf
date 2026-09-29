@@ -6,7 +6,7 @@
 resource "azurerm_storage_account" "storage_account" {
   count = var.deploy_agent_data_services ? 1 : 0
 
-  name                = "aifoundry${random_string.unique.result}storage00"
+  name                = "${local.account_name}st"
   resource_group_name = azurerm_resource_group.rg-ai00.name
   location            = azurerm_resource_group.rg-ai00.location
 
@@ -20,7 +20,7 @@ resource "azurerm_storage_account" "storage_account" {
   ## Network access configuration
   min_tls_version                 = "TLS1_2"
   allow_nested_items_to_be_public = false
-  tags                            = local.common_tags
+  tags                            = var.common_tags
   network_rules {
     default_action = "Deny"
     bypass = [
@@ -42,7 +42,7 @@ resource "azurerm_private_endpoint" "pe-storage" {
   resource_group_name = azurerm_resource_group.rg-ai00.name
   location            = azurerm_resource_group.rg-ai00.location
   subnet_id           = azurerm_subnet.private_endpoint_subnet.id
-  tags                = local.common_tags
+  tags                = var.common_tags
   private_service_connection {
     name                           = "${azurerm_storage_account.storage_account[0].name}-private-link-service-connection"
     private_connection_resource_id = azurerm_storage_account.storage_account[0].id
@@ -55,7 +55,7 @@ resource "azurerm_private_endpoint" "pe-storage" {
   private_dns_zone_group {
     name = "${azurerm_storage_account.storage_account[0].name}-dns-config"
     private_dns_zone_ids = [
-      local.platform_region0.private_dns_zone_ids.blob
+      var.platform.private_dns_zone_ids.blob
     ]
   }
 }
