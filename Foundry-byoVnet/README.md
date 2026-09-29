@@ -31,6 +31,8 @@ terraform init && terraform apply
 
 ⚠️ This version moves every resource into `modules/foundry-region/` and adds the region abbreviation to the Foundry account and data service names. Terraform cannot carry an earlier deployment forward. Run `terraform destroy` with the version you deployed, finish the [cleanup](#cleanup) steps, then apply this version.
 
+The three address variables (`ai_vnet_address_space`, `ai_foundry_subnet_address`, `private_endpoint_subnet_address`) are replaced by `regional_networks`. Terraform only warns about undeclared variables in `terraform.tfvars`, so move any custom prefixes into `regional_networks.region0` before applying, or the defaults are used.
+
 ## Variables
 
 This module creates its own VNet with subnets and hub connection per region. Customize networking and deployment names, or use defaults.
@@ -85,17 +87,17 @@ Capability hosts cannot be updated in place, so pick a value before you deploy. 
 
 `foundry_regions` is a map keyed by `region0` and, when deployed, `region1`. Each entry has:
 
-| Field                    | Purpose                                                    |
-| ------------------------ | ---------------------------------------------------------- |
-| `region_name`            | Azure region name                                          |
-| `region_abbr`            | Region abbreviation used in resource names                 |
-| `resource_group_id`      | Regional resource group ID                                 |
-| `foundry_id`             | Microsoft Foundry account ID                               |
-| `foundry_endpoint`       | Microsoft Foundry account endpoint                         |
-| `project_id`             | Microsoft Foundry project ID                               |
-| `model_deployment_names` | Model deployment names in the account                      |
-| `storage_account_id`     | Storage account ID, null when data services are disabled   |
-| `cosmosdb_account_id`    | Cosmos DB account ID, null when data services are disabled |
+| Field                    | Purpose                                                                                 |
+| ------------------------ | --------------------------------------------------------------------------------------- |
+| `region_name`            | Azure region name                                                                       |
+| `region_abbr`            | Region abbreviation used in resource names                                              |
+| `resource_group_id`      | Regional resource group ID                                                              |
+| `foundry_id`             | Microsoft Foundry account ID                                                            |
+| `foundry_endpoint`       | Foundry account endpoint (`properties.endpoint`, the `cognitiveservices.azure.com` URL) |
+| `project_id`             | Microsoft Foundry project ID                                                            |
+| `model_deployment_names` | Model deployment names in the account                                                   |
+| `storage_account_id`     | Storage account ID, null when data services are disabled                                |
+| `cosmosdb_account_id`    | Cosmos DB account ID, null when data services are disabled                              |
 | `ai_search_id`           | AI Search service ID, null when data services are disabled |
 
 ## Cleanup
