@@ -1,11 +1,13 @@
 locals {
-  platform_region0 = data.terraform_remote_state.networking.outputs.alz_regions.region0
+  alz_regions = data.terraform_remote_state.networking.outputs.alz_regions
+
+  selected_regions = {
+    region0 = local.alz_regions.region0
+  }
 
   common_tags = {
     environment = "non-prod"
     managed_by  = "terraform"
     project     = "azure-infra-poc"
   }
-
-  project_id_guid = "${substr(azapi_resource.foundry_project.output.properties.internalId, 0, 8)}-${substr(azapi_resource.foundry_project.output.properties.internalId, 8, 4)}-${substr(azapi_resource.foundry_project.output.properties.internalId, 12, 4)}-${substr(azapi_resource.foundry_project.output.properties.internalId, 16, 4)}-${substr(azapi_resource.foundry_project.output.properties.internalId, 20, 12)}"
 }

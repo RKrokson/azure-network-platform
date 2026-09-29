@@ -4,11 +4,11 @@ resource "azapi_resource" "ai_search" {
   count = var.deploy_agent_data_services ? 1 : 0
 
   type                      = "Microsoft.Search/searchServices@2024-06-01-preview"
-  name                      = "aifoundry${random_string.unique.result}search"
+  name                      = "${local.account_name}search"
   parent_id                 = azurerm_resource_group.rg-ai00.id
   location                  = azurerm_resource_group.rg-ai00.location
   schema_validation_enabled = true
-  tags                      = local.common_tags
+  tags                      = var.common_tags
 
   body = {
     sku = {
@@ -50,7 +50,7 @@ resource "azurerm_private_endpoint" "pe-aisearch" {
   resource_group_name = azurerm_resource_group.rg-ai00.name
   location            = azurerm_resource_group.rg-ai00.location
   subnet_id           = azurerm_subnet.private_endpoint_subnet.id
-  tags                = local.common_tags
+  tags                = var.common_tags
 
   private_service_connection {
     name                           = "${azapi_resource.ai_search[0].name}-private-link-service-connection"
@@ -64,7 +64,7 @@ resource "azurerm_private_endpoint" "pe-aisearch" {
   private_dns_zone_group {
     name = "${azapi_resource.ai_search[0].name}-dns-config"
     private_dns_zone_ids = [
-      local.platform_region0.private_dns_zone_ids.search
+      var.platform.private_dns_zone_ids.search
     ]
   }
 }

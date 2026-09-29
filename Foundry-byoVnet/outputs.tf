@@ -1,29 +1,4 @@
-output "resource_group_id" {
-  description = "The ID of the AI Foundry resource group"
-  value       = azurerm_resource_group.rg-ai00.id
-}
-
-output "ai_foundry_id" {
-  description = "The ID of the AI Foundry account"
-  value       = azapi_resource.foundry.id
-}
-
-output "ai_foundry_project_id" {
-  description = "The ID of the AI Foundry project"
-  value       = azapi_resource.foundry_project.id
-}
-
-output "storage_account_id" {
-  description = "The ID of the Storage Account, or null when agent data services are disabled"
-  value       = one(azurerm_storage_account.storage_account[*].id)
-}
-
-output "cosmosdb_account_id" {
-  description = "The ID of the Cosmos DB account, or null when agent data services are disabled"
-  value       = one(azurerm_cosmosdb_account.cosmosdb[*].id)
-}
-
-output "ai_search_id" {
-  description = "The ID of the AI Search service, or null when agent data services are disabled"
-  value       = one(azapi_resource.ai_search[*].id)
+output "foundry_regions" {
+  description = "Deployed Foundry stacks keyed by alz_regions key. region1 is present only when it was deployed."
+  value       = { for key, stack in module.foundry_region : key => stack.foundry_region }
 }

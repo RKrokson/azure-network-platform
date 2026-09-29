@@ -12,11 +12,11 @@ resource "azapi_resource" "foundry_project" {
   ]
 
   type                      = "Microsoft.CognitiveServices/accounts/projects@2025-06-01"
-  name                      = "project${random_string.unique.result}"
+  name                      = "project${var.name_suffix}"
   parent_id                 = azapi_resource.foundry.id
   location                  = azurerm_resource_group.rg-ai00.location
   schema_validation_enabled = false
-  tags                      = local.common_tags
+  tags                      = var.common_tags
 
   body = {
     sku = {
@@ -133,12 +133,12 @@ resource "azapi_resource" "conn_aisearch" {
 ## Create workspace-based Application Insights for Foundry project tracing
 ##
 resource "azurerm_application_insights" "foundry_appinsights" {
-  name                = "appinsights-foundry-${random_string.unique.result}"
+  name                = "appinsights-foundry-${var.platform.region_abbr}-${var.name_suffix}"
   location            = azurerm_resource_group.rg-ai00.location
   resource_group_name = azurerm_resource_group.rg-ai00.name
   application_type    = "web"
-  workspace_id        = data.terraform_remote_state.networking.outputs.log_analytics_workspace_id
-  tags                = local.common_tags
+  workspace_id        = var.log_analytics_workspace_id
+  tags                = var.common_tags
 }
 
 ## Create project connection to Application Insights

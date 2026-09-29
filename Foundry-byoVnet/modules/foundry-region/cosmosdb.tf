@@ -3,7 +3,7 @@
 resource "azurerm_cosmosdb_account" "cosmosdb" {
   count = var.deploy_agent_data_services ? 1 : 0
 
-  name                = "aifoundry${random_string.unique.result}cosmosdb"
+  name                = "${local.account_name}cosmosdb"
   resource_group_name = azurerm_resource_group.rg-ai00.name
   location            = azurerm_resource_group.rg-ai00.location
 
@@ -19,7 +19,7 @@ resource "azurerm_cosmosdb_account" "cosmosdb" {
   # Set high availability and failover settings
   automatic_failover_enabled       = false
   multiple_write_locations_enabled = false
-  tags                             = local.common_tags
+  tags                             = var.common_tags
 
   # Configure consistency settings
   consistency_policy {
@@ -43,7 +43,7 @@ resource "azurerm_private_endpoint" "pe-cosmosdb" {
   resource_group_name = azurerm_resource_group.rg-ai00.name
   location            = azurerm_resource_group.rg-ai00.location
   subnet_id           = azurerm_subnet.private_endpoint_subnet.id
-  tags                = local.common_tags
+  tags                = var.common_tags
 
   private_service_connection {
     name                           = "${azurerm_cosmosdb_account.cosmosdb[0].name}-private-link-service-connection"
@@ -57,7 +57,7 @@ resource "azurerm_private_endpoint" "pe-cosmosdb" {
   private_dns_zone_group {
     name = "${azurerm_cosmosdb_account.cosmosdb[0].name}-dns-config"
     private_dns_zone_ids = [
-      local.platform_region0.private_dns_zone_ids.documents
+      var.platform.private_dns_zone_ids.documents
     ]
   }
 }
