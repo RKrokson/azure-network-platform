@@ -1,4 +1,8 @@
 ## Diagnostic settings — routes all Foundry-byoVnet resource logs to law00
+##
+## Azure returns per-category metric entries for Cosmos DB and Storage targets, which
+## the pinned azurerm 4.26 `metric` block reports as drift. Those settings ignore `metric`
+## changes after creation.
 
 resource "azurerm_monitor_diagnostic_setting" "diag_foundry" {
   name               = "diag-foundry-${var.name_suffix}"
@@ -58,6 +62,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_cosmosdb" {
   metric {
     category = "AllMetrics"
   }
+
+  lifecycle {
+    ignore_changes = [metric]
+  }
 }
 
 resource "azurerm_monitor_diagnostic_setting" "diag_storage_blob" {
@@ -77,6 +85,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_storage_blob" {
 
   metric {
     category = "AllMetrics"
+  }
+
+  lifecycle {
+    ignore_changes = [metric]
   }
 }
 
@@ -98,6 +110,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_storage_file" {
   metric {
     category = "AllMetrics"
   }
+
+  lifecycle {
+    ignore_changes = [metric]
+  }
 }
 
 resource "azurerm_monitor_diagnostic_setting" "diag_storage_queue" {
@@ -117,6 +133,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_storage_queue" {
 
   metric {
     category = "AllMetrics"
+  }
+
+  lifecycle {
+    ignore_changes = [metric]
   }
 }
 
@@ -138,6 +158,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_storage_table" {
   metric {
     category = "AllMetrics"
   }
+
+  lifecycle {
+    ignore_changes = [metric]
+  }
 }
 
 # Storage account parent — metrics only. No log categories exist at parent level; logs live at sub-service tier.
@@ -152,6 +176,10 @@ resource "azurerm_monitor_diagnostic_setting" "diag_storage_account" {
 
   metric {
     category = "Transaction"
+  }
+
+  lifecycle {
+    ignore_changes = [metric]
   }
 }
 
