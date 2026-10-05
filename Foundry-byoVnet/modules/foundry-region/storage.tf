@@ -27,6 +27,13 @@ resource "azurerm_storage_account" "storage_account" {
       "AzureServices"
     ]
   }
+
+  # Tenant governance policy (Modify effect) can disable public network access at create time.
+  lifecycle {
+    ignore_changes = [
+      public_network_access_enabled
+    ]
+  }
 }
 
 ## Create Private Endpoint for storage

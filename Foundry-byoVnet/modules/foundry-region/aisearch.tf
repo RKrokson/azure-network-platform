@@ -31,7 +31,7 @@ resource "azapi_resource" "ai_search" {
       disableLocalAuth = true
 
       # Networking-related controls
-      publicNetworkAccess = "disabled"
+      publicNetworkAccess = "Disabled"
       networkRuleSet = {
         bypass = "None"
       }

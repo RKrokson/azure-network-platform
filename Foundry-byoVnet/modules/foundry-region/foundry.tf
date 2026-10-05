@@ -56,6 +56,14 @@ resource "azapi_resource" "foundry" {
   response_export_values = [
     "properties.endpoint"
   ]
+
+  # Tenant governance policy (Modify effect) can force disableLocalAuth = true at create time.
+  # Ignore it so the policy value does not cause perpetual drift and Foundry account updates.
+  lifecycle {
+    ignore_changes = [
+      body.properties.disableLocalAuth
+    ]
+  }
 }
 
 ## Create a deployment for OpenAI's GPT-5.4 (2026-03-05) in the AI Foundry resource
@@ -63,6 +71,7 @@ resource "azapi_resource" "foundry" {
 resource "azurerm_cognitive_deployment" "aifoundry_deployment_gpt_4o" {
   name                 = var.gpt_model_deployment_name
   cognitive_account_id = azapi_resource.foundry.id
+  rai_policy_name      = "Microsoft.DefaultV2"
 
   sku {
     name     = var.gpt_model_sku_name
