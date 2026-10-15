@@ -7,7 +7,7 @@ output "foundry_region" {
     foundry_id             = azapi_resource.foundry.id
     foundry_endpoint       = azapi_resource.foundry.output.properties.endpoint
     project_id             = azapi_resource.foundry_project.id
-    model_deployment_names = [azurerm_cognitive_deployment.aifoundry_deployment_gpt_4o.name]
+    model_deployment_names = [azurerm_cognitive_deployment.aifoundry_deployment.name]
     storage_account_id     = one(azurerm_storage_account.storage_account[*].id)
     cosmosdb_account_id    = one(azurerm_cosmosdb_account.cosmosdb[*].id)
     ai_search_id           = one(azapi_resource.ai_search[*].id)

@@ -4,7 +4,7 @@ This is an optional application landing zone. It deploys Microsoft Foundry with 
 
 This module is based on the [validated Terraform sample](https://github.com/microsoft-foundry/foundry-samples/tree/main/infrastructure/infrastructure-setup-terraform/15b-private-network-standard-agent-setup-byovnet), modified to pull network dependencies from the platform landing zone via `terraform_remote_state`.
 
-"Secure" refers to the use of private endpoints. Local auth (API keys) is disabled on AI Search and Cosmos DB when the agent data services are deployed. The Foundry account keeps `disableLocalAuth = false`, which the Agent proxy requires for internal communication over a BYO VNet. If a tenant governance policy forces local auth off or disables storage public network access at create time, Terraform ignores those two properties instead of fighting the policy on every plan.
+Local auth (API keys) is disabled on the Foundry account and, when deployed, AI Search and Cosmos DB.
 
 The template follows the [documented architecture](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/virtual-networks) for Microsoft Foundry Standard Setup with private networking (BYO VNet).
 
@@ -27,22 +27,21 @@ terraform init && terraform apply
 
 **Prerequisites:** Networking module must be applied first with `add_private_dns00 = true`.
 
-## Upgrading an existing deployment
-
-⚠️ This version moves every resource into `modules/foundry-region/` and adds the region abbreviation to the Foundry account and data service names. Terraform cannot carry an earlier deployment forward. Run `terraform destroy` with the version you deployed, finish the [cleanup](#cleanup) steps, then apply this version.
-
-The three address variables (`ai_vnet_address_space`, `ai_foundry_subnet_address`, `private_endpoint_subnet_address`) are replaced by `regional_networks`. Terraform only warns about undeclared variables in `terraform.tfvars`, so move any custom prefixes into `regional_networks.region0` before applying, or the defaults are used.
-
 ## Variables
 
 This module creates its own VNet with subnets and hub connection per region. Customize networking and deployment names, or use defaults.
 
-| Variable                     | Default                    | Purpose                                         |
-| ---------------------------- | --------------------------- | ----------------------------------------------- |
-| `resource_group_name_ai00`   | `"rg-ai00"`                | Resource group base name                        |
-| `deploy_region1`             | `false`                    | Deploy a second stack in Networking region 1    |
-| `regional_networks`          | See below                  | Per-region VNet and subnet address prefixes     |
-| `deploy_agent_data_services` | `true`                     | Deploy BYO agent data services in every region  |
+| Variable                     | Default            | Purpose                                        |
+| ---------------------------- | ------------------ | ---------------------------------------------- |
+| `resource_group_name_ai00`   | `"rg-ai00"`        | Resource group base name                       |
+| `deploy_region1`             | `false`            | Deploy a second stack in Networking region 1   |
+| `regional_networks`          | See below          | Per-region VNet and subnet address prefixes    |
+| `deploy_agent_data_services` | `true`             | Deploy BYO agent data services in every region |
+| `gpt_model_deployment_name`  | `"gpt-6.1-sol"`    | Azure model deployment name                    |
+| `gpt_model_name`             | `"gpt-6.1-sol"`    | GPT model deployed in every selected region    |
+| `gpt_model_version`          | `"2026-09-29"`     | GPT model version                              |
+| `gpt_model_sku_name`         | `"GlobalStandard"` | GPT deployment SKU                             |
+| `gpt_model_capacity`         | `1`                | GPT deployment capacity units                  |
 
 `regional_networks` defaults:
 
@@ -67,7 +66,9 @@ Region 1 requires:
 
 If Networking region 1 is missing, `terraform plan` fails with a message naming the Networking variables to set. Networking region 1 on its own does not deploy a second Foundry stack. This module only uses it when `deploy_region1 = true`.
 
-Each stack resolves private endpoints through its own region's Private DNS. A client in region 0 cannot resolve the region 1 Foundry endpoint, so test region 1 from the region 1 test VM. The two stacks share no state and do not fail over.
+Each stack resolves private endpoints through its own region's Private DNS. A client in region 0 cannot resolve the region 1 Foundry endpoint, so test region 1 from the region 1 test VM.
+
+Both stacks are managed by the same Terraform root and state. Their Foundry resources and agent data are separate; this module does not configure cross-region failover.
 
 Region 1 roughly doubles the module's cost. With data services enabled, it adds a second AI Search service, Cosmos DB account, and Storage account.
 
@@ -98,13 +99,15 @@ Capability hosts cannot be updated in place, so pick a value before you deploy. 
 | `model_deployment_names` | Model deployment names in the account                                                   |
 | `storage_account_id`     | Storage account ID, null when data services are disabled                                |
 | `cosmosdb_account_id`    | Cosmos DB account ID, null when data services are disabled                              |
-| `ai_search_id`           | AI Search service ID, null when data services are disabled |
+| `ai_search_id`           | AI Search service ID, null when data services are disabled                              |
 
 ## Cleanup
 
-Destroy this module before Networking. Repeat the purge for every region you deployed.
+Destroy this module before Networking, using the same variable settings as the deployment.
 
-⚠️ **Soft-delete gotcha:** After `terraform destroy`, each Foundry account enters soft-delete state with a `serviceassociationlink` to its region's AI subnet. You must purge every soft-deleted account before destroying Networking, or the subnet delete will fail. Wait ~10 minutes after each purge completes.
+⚠️ **Soft-delete gotcha:** A deleted Foundry account retains a service association link to its region's AI subnet until it is purged. Purge every soft-deleted account in every deployed region, then allow about 10 minutes for the links to release.
+
+If `terraform destroy` returns `409 RequestConflict` and the account is still in `Deleting`, wait for Azure to finish deleting it before purging. After purging, rerun `terraform destroy` to remove any remaining spoke subnets, VNets, and resource groups. Finish this module's teardown before destroying Networking.
 
 - [Purge a deleted resource](https://learn.microsoft.com/en-us/azure/ai-services/recover-purge-resources?tabs=azure-cli#purge-a-deleted-resource)
 

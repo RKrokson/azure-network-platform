@@ -74,17 +74,17 @@ variable "private_endpoint_subnet_name" {
 variable "gpt_model_deployment_name" {
   description = "Name of the GPT model deployment in AI Foundry"
   type        = string
-  default     = "gpt-5.4"
+  default     = "gpt-6.1-sol"
 }
 variable "gpt_model_name" {
   description = "GPT model name"
   type        = string
-  default     = "gpt-5.4"
+  default     = "gpt-6.1-sol"
 }
 variable "gpt_model_version" {
   description = "GPT model version"
   type        = string
-  default     = "2026-03-05"
+  default     = "2026-09-29"
 }
 variable "gpt_model_sku_name" {
   description = "SKU name for the GPT model deployment"
