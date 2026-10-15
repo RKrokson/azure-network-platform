@@ -22,9 +22,7 @@ resource "azapi_resource" "foundry" {
 
     properties = {
 
-      # Must remain false for BYO VNet — the Foundry Agent proxy requires local auth
-      # for internal communication. See PG reference: 15b-private-network-standard-agent-setup-byovnet
-      disableLocalAuth = false
+      disableLocalAuth = true
 
       # Specifies that this is an AI Foundry resource
       allowProjectManagement = true
@@ -57,18 +55,16 @@ resource "azapi_resource" "foundry" {
     "properties.endpoint"
   ]
 
-  # Tenant governance policy (Modify effect) can force disableLocalAuth = true at create time.
-  # Ignore it so the policy value does not cause perpetual drift and Foundry account updates.
-  lifecycle {
-    ignore_changes = [
-      body.properties.disableLocalAuth
-    ]
-  }
 }
 
-## Create a deployment for OpenAI's GPT-5.4 (2026-03-05) in the AI Foundry resource
+moved {
+  from = azurerm_cognitive_deployment.aifoundry_deployment_gpt_4o
+  to   = azurerm_cognitive_deployment.aifoundry_deployment
+}
+
+## Create a deployment for the configured OpenAI model in the AI Foundry resource
 ##
-resource "azurerm_cognitive_deployment" "aifoundry_deployment_gpt_4o" {
+resource "azurerm_cognitive_deployment" "aifoundry_deployment" {
   name                 = var.gpt_model_deployment_name
   cognitive_account_id = azapi_resource.foundry.id
   rai_policy_name      = "Microsoft.DefaultV2"

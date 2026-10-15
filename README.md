@@ -14,11 +14,11 @@ This repo follows a two-tier landing zone pattern:
 | ------------- | -------- | ----------------------------------------------------------------------- | -------------------------------- |
 | `Networking/` | Platform | Azure Virtual WAN, hubs, spoke VNets, optional Firewall and Private DNS | [README](./Networking/README.md) |
 
-**Application Landing Zones** — Optional workloads that plug into the platform. Deploy one or more application modules. Each creates its own spoke VNet with a dedicated address range, so there are no CIDR conflicts.
+**Application Landing Zones** — Optional workloads that plug into the platform. Deploy one or more application modules. Each creates its own spoke VNets with dedicated address ranges, so there are no CIDR conflicts.
 
 | Folder                   | Layer       | Description                                                                                                          | Docs                                        |
 | ------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `Foundry-byoVnet/`       | Application | AI Foundry with private endpoints in a BYO VNet. Adapted from Microsoft's 15b terraform foundry sample.              | [README](./Foundry-byoVnet/README.md)       |
+| `Foundry-byoVnet/`       | Application | AI Foundry with private endpoints in a BYO VNet, an optional second region, and optional BYO agent data services.    | [README](./Foundry-byoVnet/README.md)       |
 | `Foundry-managedVnet/`   | Application | AI Foundry with private endpoints in a Microsoft-managed VNet. Adapted from Microsoft's 18 terraform foundry sample. | [README](./Foundry-managedVnet/README.md)   |
 | `ContainerApps-byoVnet/` | Application | Azure Container Apps environment with ACR in a BYO VNet. Optional MCP container for testing.                         | [README](./ContainerApps-byoVnet/README.md) |
 | `Fabric-private/`        | Application | Microsoft Fabric with workspace PE (private inbound) + 3 MPEs to LZ-local resources (Storage, SQL, KV).              | [README](./Fabric-private/README.md)        |
@@ -49,8 +49,6 @@ Future modules will follow the same application landing zone pattern. See the [A
    terraform init && terraform apply
    ```
 
-   If this checkout just upgraded to the `alz_regions` contract, run `terraform apply` in `Networking/` before planning any application landing zone so the local state contains `alz_regions`.
-
 4. (Optional) Deploy an **application landing zone**. Each module is independent:
    ```sh
    cd ../Foundry-byoVnet   # or ../Foundry-managedVnet, ../ContainerApps-byoVnet, or ../Fabric-private
@@ -71,8 +69,10 @@ See each module's README for details.
    terraform destroy
    ```
 
-2. **Purge the soft-deleted AI Foundry resource.** The subnet service association link blocks Networking deletion until this is done. Wait ~10 minutes after purge completes.
+2. **Purge every soft-deleted Foundry account, one per deployed region.** Wait for account deletion to finish before purging, then allow about 10 minutes for any subnet service association links to release.
    - [Purge a deleted resource](https://learn.microsoft.com/en-us/azure/ai-services/recover-purge-resources?tabs=azure-cli#purge-a-deleted-resource)
+
+   If the initial Foundry destroy left resources, rerun `terraform destroy` from that module's folder after purging. Finish application teardown before continuing.
 
 3. Destroy the platform:
    ```sh

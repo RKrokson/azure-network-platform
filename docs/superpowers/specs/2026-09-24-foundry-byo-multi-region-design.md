@@ -1,6 +1,7 @@
 # Foundry BYO VNet multi-region
 
-**Date:** 2026-09-24  
+**Date:** 2026-09-24
+
 **Status:** Draft, pending user review
 
 ## Purpose
